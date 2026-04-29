@@ -3,9 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Coins, Plus, ArrowDown, ArrowUp, Sparkles, Zap, Crown, Rocket, Loader2,
-  Gift, Flame, TrendingUp, Activity, Target, Info, ChevronRight, CircleDollarSign,
+  Gift, Flame, TrendingUp, Activity, Check, ShieldCheck, Bolt, Lock,
+  CreditCard, Star, Calculator,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCoins, coinsToDms } from "@/lib/ads";
@@ -15,11 +17,33 @@ type Tx = {
   description: string | null; balance_after: number; created_at: string;
 };
 
+// 1 coin = R$ 0,10  →  R$ 10 = 100 coins
+const PRICE_PER_COIN = 0.10;
+const coinsToBRL = (coins: number) => coins * PRICE_PER_COIN;
+const brlToCoins = (brl: number) => Math.floor(brl / PRICE_PER_COIN);
+
+const formatBRL = (n: number) =>
+  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
 const PACKAGES = [
-  { coins: 100, bonus: 0, price: "R$ 19,90", icon: Zap, label: "Starter", tag: null, accent: "from-sky-500 to-cyan-500", hex: "#06b6d4" },
-  { coins: 500, bonus: 50, price: "R$ 89,90", icon: Rocket, label: "Pro", tag: "POPULAR", accent: "from-primary to-primary-glow", hex: "hsl(var(--primary))" },
-  { coins: 2000, bonus: 400, price: "R$ 299,90", icon: Crown, label: "Business", tag: "+20%", accent: "from-amber-400 to-orange-500", hex: "#f59e0b" },
-  { coins: 5000, bonus: 1500, price: "R$ 699,90", icon: Flame, label: "Whale", tag: "+30%", accent: "from-fuchsia-500 to-pink-500", hex: "#d946ef" },
+  {
+    coins: 100, bonus: 10, priceBRL: 10, icon: Zap, label: "Starter",
+    desc: "Ideal para testar a plataforma", tag: null, popular: false,
+    accent: "from-sky-500 to-cyan-400", glow: "shadow-[0_0_40px_-10px_rgba(6,182,212,0.5)]",
+    perks: ["Entrega instantânea", "Bônus de 10%", "Sem expiração"],
+  },
+  {
+    coins: 500, bonus: 100, priceBRL: 50, icon: Rocket, label: "Pro",
+    desc: "O mais escolhido pelos criadores", tag: "MAIS POPULAR", popular: true,
+    accent: "from-primary to-primary-glow", glow: "shadow-[0_0_60px_-10px_hsl(var(--primary)/0.7)]",
+    perks: ["Bônus de 20%", "Suporte prioritário", "Melhor custo-benefício"],
+  },
+  {
+    coins: 2000, bonus: 600, priceBRL: 200, icon: Crown, label: "Business",
+    desc: "Para campanhas grandes e recorrentes", tag: "+30% BÔNUS", popular: false,
+    accent: "from-amber-400 to-orange-500", glow: "shadow-[0_0_40px_-10px_rgba(245,158,11,0.5)]",
+    perks: ["Bônus de 30%", "Alcance massivo", "ROI máximo"],
+  },
 ];
 
 const Credits = () => {
@@ -28,6 +52,8 @@ const Credits = () => {
   const [txs, setTxs] = useState<Tx[]>([]);
   const [buying, setBuying] = useState<number | null>(null);
   const [tab, setTab] = useState<"shop" | "history">("shop");
+  const [customBRL, setCustomBRL] = useState<string>("25");
+  const [customLoading, setCustomLoading] = useState(false);
 
   const load = async () => {
     if (!user) return;
@@ -53,6 +79,24 @@ const Credits = () => {
     load();
   };
 
+  const buyCustom = async () => {
+    const brl = parseFloat(customBRL.replace(",", "."));
+    if (!brl || brl < 5) return toast.error("Valor mínimo: R$ 5,00");
+    const coinsAmount = brlToCoins(brl);
+    setCustomLoading(true);
+    const { error } = await supabase.functions.invoke("add-credits", { body: { amount: coinsAmount } });
+    setCustomLoading(false);
+    if (error) return toast.error("Falha ao processar");
+    toast.success(`+${formatCoins(coinsAmount)} coins adicionados! 🎉`);
+    refresh();
+    load();
+  };
+
+  const customCoins = useMemo(() => {
+    const brl = parseFloat((customBRL || "0").replace(",", "."));
+    return isNaN(brl) ? 0 : brlToCoins(brl);
+  }, [customBRL]);
+
   const coins = profile?.credits ?? 0;
   const reach = coinsToDms(coins);
 
@@ -68,206 +112,278 @@ const Credits = () => {
   }, [txs]);
 
   return (
-    <div className="max-w-[1400px] mx-auto">
-      {/* ================= HEADER STRIP ================= */}
-      <div className="relative mb-6 rounded-2xl border border-border bg-card overflow-hidden">
-        {/* Faixa colorida lateral */}
-        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-primary via-primary-glow to-primary" />
+    <div className="max-w-[1280px] mx-auto pb-12">
+      {/* ================= HERO BALANCE ================= */}
+      <div className="relative mb-8 rounded-3xl overflow-hidden border border-border bg-gradient-to-br from-card via-card to-secondary/30">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--primary)/0.15),transparent_50%)]" />
+        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
 
-        <div className="grid md:grid-cols-[1fr,auto,auto,auto] gap-0 divide-y md:divide-y-0 md:divide-x divide-border">
-          {/* Saldo principal */}
-          <div className="p-5 pl-7 flex items-center gap-4">
-            <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-primary to-primary-glow grid place-items-center shadow-glow shrink-0">
-              <Coins className="h-7 w-7 text-white" />
+        <div className="relative grid md:grid-cols-[1.2fr,1fr,1fr,1fr] gap-0 divide-y md:divide-y-0 md:divide-x divide-border/60">
+          <div className="p-6 md:p-7 flex items-center gap-5">
+            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary-glow grid place-items-center shadow-glow shrink-0">
+              <Coins className="h-8 w-8 text-white" />
             </div>
             <div className="min-w-0">
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold">Saldo disponível</div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black tracking-tighter tabular-nums">{formatCoins(coins)}</span>
+              <div className="flex items-baseline gap-2 mt-0.5">
+                <span className="text-5xl font-black tracking-tighter tabular-nums">{formatCoins(coins)}</span>
                 <span className="text-sm text-muted-foreground font-bold">coins</span>
               </div>
-              <div className="text-[11px] text-muted-foreground mt-0.5">
-                ≈ <b className="text-foreground">{reach.toLocaleString("pt-BR")}</b> DMs · <b className="text-foreground">{Math.floor(reach / 1000)}k</b> alcance
+              <div className="text-xs text-muted-foreground mt-1">
+                ≈ <b className="text-foreground">{reach.toLocaleString("pt-BR")}</b> DMs · vale <b className="text-foreground">{formatBRL(coinsToBRL(coins))}</b>
               </div>
             </div>
           </div>
 
-          {/* Mini stat 1 */}
-          <div className="p-5 flex flex-col justify-center min-w-[140px]">
-            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-success font-bold">
-              <ArrowUp className="h-3 w-3" /> Comprado
-            </div>
-            <div className="text-2xl font-black tabular-nums mt-1">{formatCoins(totalBought)}</div>
-            <div className="text-[10px] text-muted-foreground">lifetime</div>
-          </div>
-
-          {/* Mini stat 2 */}
-          <div className="p-5 flex flex-col justify-center min-w-[140px]">
-            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-destructive font-bold">
-              <ArrowDown className="h-3 w-3" /> Gasto
-            </div>
-            <div className="text-2xl font-black tabular-nums mt-1">{formatCoins(totalSpent)}</div>
-            <div className="text-[10px] text-muted-foreground">lifetime</div>
-          </div>
-
-          {/* Mini stat 3 */}
-          <div className="p-5 flex flex-col justify-center min-w-[140px]">
-            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-primary font-bold">
-              <Activity className="h-3 w-3" /> 7 dias
-            </div>
-            <div className="text-2xl font-black tabular-nums mt-1">{formatCoins(last7d)}</div>
-            <div className="text-[10px] text-muted-foreground">movimentação</div>
-          </div>
+          {[
+            { icon: ArrowUp, label: "Comprado", value: totalBought, color: "text-success" },
+            { icon: ArrowDown, label: "Gasto", value: totalSpent, color: "text-destructive" },
+            { icon: Activity, label: "7 dias", value: last7d, color: "text-primary" },
+          ].map((s) => {
+            const I = s.icon;
+            return (
+              <div key={s.label} className="p-6 md:p-7 flex flex-col justify-center">
+                <div className={`flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-bold ${s.color}`}>
+                  <I className="h-3 w-3" /> {s.label}
+                </div>
+                <div className="text-3xl font-black tabular-nums mt-1.5">{formatCoins(s.value)}</div>
+                <div className="text-[10px] text-muted-foreground">coins</div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* ================= TABS ================= */}
-      <div className="flex items-center gap-1 mb-5 p-1 rounded-xl bg-secondary/50 border border-border w-fit">
+      <div className="flex items-center gap-1 mb-8 p-1 rounded-xl bg-secondary/50 border border-border w-fit mx-auto md:mx-0">
         <button
           onClick={() => setTab("shop")}
-          className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition flex items-center gap-2 ${
+          className={`px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition flex items-center gap-2 ${
             tab === "shop" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          <Sparkles className="h-3.5 w-3.5" /> Loja
+          <Sparkles className="h-3.5 w-3.5" /> Comprar coins
         </button>
         <button
           onClick={() => setTab("history")}
-          className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition flex items-center gap-2 ${
+          className={`px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition flex items-center gap-2 ${
             tab === "history" ? "bg-card shadow text-foreground" : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          <Activity className="h-3.5 w-3.5" /> Extrato
+          <Activity className="h-3.5 w-3.5" /> Histórico
           {txs.length > 0 && (
             <span className="px-1.5 py-0.5 rounded-md bg-primary/20 text-primary text-[10px]">{txs.length}</span>
           )}
         </button>
-        <div className="ml-2 px-2.5 py-1 rounded-md bg-warning/15 text-warning text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
-          🧪 Modo teste · grátis
-        </div>
       </div>
 
       {tab === "shop" && (
         <>
-          {/* ================= PACOTES — LISTA HORIZONTAL ================= */}
-          <div className="space-y-3">
-            {PACKAGES.map((p, idx) => {
+          {/* ================= TÍTULO SEÇÃO ================= */}
+          <div className="text-center mb-10 px-4">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warning/15 text-warning text-[10px] font-black uppercase tracking-widest mb-4">
+              🧪 Modo teste · adição grátis
+            </div>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight">Escolha seu pacote</h1>
+            <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+              Pague uma vez, use quando quiser. Coins não expiram e podem ser usadas em qualquer campanha.
+            </p>
+          </div>
+
+          {/* ================= CARDS PREMIUM ================= */}
+          <div className="grid md:grid-cols-3 gap-5 md:gap-6 px-2 md:px-0">
+            {PACKAGES.map((p) => {
               const I = p.icon;
               const total = p.coins + p.bonus;
               const reachPkg = coinsToDms(total);
-              const isPopular = p.label === "Pro";
               return (
                 <div
                   key={p.coins}
-                  className={`group relative rounded-2xl bg-card border overflow-hidden transition-all hover:shadow-glow ${
-                    isPopular ? "border-primary/50 shadow-glow" : "border-border hover:border-primary/30"
+                  className={`group relative rounded-3xl bg-card border-2 p-6 md:p-7 transition-all duration-300 hover:-translate-y-2 ${
+                    p.popular
+                      ? `border-primary ${p.glow} md:scale-105`
+                      : "border-border hover:border-primary/40 hover:shadow-xl"
                   }`}
                 >
-                  {/* Glow lateral */}
-                  <div
-                    className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${p.accent}`}
-                  />
-                  <div
-                    className={`absolute -left-20 top-1/2 -translate-y-1/2 h-40 w-40 rounded-full bg-gradient-to-r ${p.accent} opacity-10 blur-3xl group-hover:opacity-20 transition`}
-                  />
-
-                  <div className="relative grid md:grid-cols-[auto,1.5fr,1fr,1fr,auto] gap-4 md:gap-6 items-center p-4 md:p-5 pl-6">
-                    {/* Ícone + número de tier */}
-                    <div className="flex items-center gap-3">
-                      <div className={`h-14 w-14 rounded-xl bg-gradient-to-br ${p.accent} grid place-items-center shadow-lg shrink-0`}>
-                        <I className="h-7 w-7 text-white" />
-                      </div>
-                      <div className="md:hidden">
-                        <div className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Tier {idx + 1}</div>
-                        <div className="text-base font-black">{p.label}</div>
+                  {/* Badge popular */}
+                  {p.tag && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-white bg-gradient-to-r ${p.accent} shadow-lg flex items-center gap-1`}>
+                        {p.popular && <Star className="h-3 w-3 fill-white" />}
+                        {p.tag}
                       </div>
                     </div>
+                  )}
 
-                    {/* Nome e total */}
-                    <div className="hidden md:block">
-                      <div className="flex items-center gap-2">
-                        <div className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Tier {idx + 1}</div>
-                        {p.tag && (
-                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider text-white bg-gradient-to-r ${p.accent}`}>
-                            {p.tag}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xl font-black tracking-tight">{p.label}</div>
-                      <div className="flex items-baseline gap-1.5 mt-0.5">
-                        <Coins className="h-3.5 w-3.5 text-primary" />
-                        <span className="text-base font-bold tabular-nums">{formatCoins(p.coins)}</span>
-                        {p.bonus > 0 && (
-                          <span className="text-[11px] text-success font-black flex items-center gap-0.5">
-                            <Gift className="h-3 w-3" /> +{formatCoins(p.bonus)}
-                          </span>
-                        )}
-                      </div>
+                  {/* Decoração */}
+                  <div className={`absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gradient-to-br ${p.accent} opacity-10 blur-2xl group-hover:opacity-20 transition`} />
+
+                  {/* Ícone + Label */}
+                  <div className="relative flex items-center gap-3 mb-5">
+                    <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${p.accent} grid place-items-center shadow-lg`}>
+                      <I className="h-7 w-7 text-white" />
                     </div>
-
-                    {/* Total recebido */}
                     <div>
-                      <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Você recebe</div>
-                      <div className="text-2xl font-black tabular-nums">{formatCoins(total)}</div>
-                      <div className="text-[10px] text-muted-foreground">coins totais</div>
-                    </div>
-
-                    {/* Alcance */}
-                    <div>
-                      <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Alcance</div>
-                      <div className="text-2xl font-black text-primary tabular-nums">{reachPkg.toLocaleString("pt-BR")}</div>
-                      <div className="text-[10px] text-muted-foreground">DMs entregues</div>
-                    </div>
-
-                    {/* Preço + CTA */}
-                    <div className="flex flex-col items-stretch md:items-end gap-2 md:min-w-[160px]">
-                      <div className="text-right md:text-right">
-                        <div className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Por apenas</div>
-                        <div className="text-2xl font-black tracking-tight leading-none">{p.price}</div>
-                      </div>
-                      <Button
-                        onClick={() => buy(p.coins, p.bonus)}
-                        disabled={buying !== null}
-                        variant={isPopular ? "discord" : "secondary"}
-                        size="sm"
-                        className="gap-1.5 font-bold w-full md:w-auto"
-                      >
-                        {buying === p.coins ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <>
-                            Comprar
-                            <ChevronRight className="h-3.5 w-3.5" />
-                          </>
-                        )}
-                      </Button>
+                      <div className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Plano</div>
+                      <div className="text-xl font-black">{p.label}</div>
                     </div>
                   </div>
+
+                  {/* Quantidade + preço */}
+                  <div className="relative mb-5">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl md:text-5xl font-black tracking-tighter tabular-nums">{formatCoins(p.coins)}</span>
+                      <span className="text-base font-bold text-muted-foreground">coins</span>
+                    </div>
+                    {p.bonus > 0 && (
+                      <div className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-md bg-success/15 text-success text-[11px] font-black">
+                        <Gift className="h-3 w-3" /> +{formatCoins(p.bonus)} de bônus
+                      </div>
+                    )}
+                    <div className="mt-3 flex items-baseline gap-1.5">
+                      <span className="text-3xl font-black tracking-tight">{formatBRL(p.priceBRL)}</span>
+                      <span className="text-xs text-muted-foreground">único</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{p.desc}</p>
+                  </div>
+
+                  {/* Benefícios */}
+                  <ul className="space-y-2 mb-6">
+                    {p.perks.map((perk) => (
+                      <li key={perk} className="flex items-center gap-2 text-xs">
+                        <div className={`h-4 w-4 rounded-full bg-gradient-to-br ${p.accent} grid place-items-center shrink-0`}>
+                          <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />
+                        </div>
+                        <span className="font-medium">{perk}</span>
+                      </li>
+                    ))}
+                    <li className="flex items-center gap-2 text-xs pt-1 border-t border-border/50 mt-3">
+                      <Bolt className="h-3.5 w-3.5 text-primary" />
+                      <span className="font-bold text-foreground">{reachPkg.toLocaleString("pt-BR")} DMs</span>
+                      <span className="text-muted-foreground">de alcance total</span>
+                    </li>
+                  </ul>
+
+                  {/* CTA */}
+                  <Button
+                    onClick={() => buy(p.coins, p.bonus)}
+                    disabled={buying !== null}
+                    variant={p.popular ? "discord" : "outline"}
+                    size="lg"
+                    className={`w-full font-black text-sm transition-all ${
+                      !p.popular && "hover:bg-primary hover:text-primary-foreground hover:border-primary"
+                    }`}
+                  >
+                    {buying === p.coins ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4" /> Comprar agora
+                      </>
+                    )}
+                  </Button>
                 </div>
               );
             })}
           </div>
 
-          {/* ================= INFO STRIP ================= */}
-          <div className="mt-6 grid md:grid-cols-3 gap-3">
-            {[
-              { icon: Target, title: "1 coin = 10 DMs", desc: "Entrega real, segmentada por nicho" },
-              { icon: TrendingUp, title: "Bônus progressivo", desc: "Pacotes maiores rendem até +30%" },
-              { icon: CircleDollarSign, title: "Coins não expiram", desc: "Use quando quiser, sem prazo" },
-            ].map((it) => {
-              const I = it.icon;
-              return (
-                <div key={it.title} className="rounded-xl border border-border bg-card/50 p-4 flex items-start gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-primary/10 grid place-items-center shrink-0">
-                    <I className="h-4 w-4 text-primary" />
+          {/* ================= VALOR PERSONALIZADO ================= */}
+          <div className="mt-8 rounded-3xl border-2 border-dashed border-border bg-card/50 p-6 md:p-8">
+            <div className="grid md:grid-cols-[auto,1fr,auto] gap-6 items-center">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 grid place-items-center shadow-lg">
+                  <Calculator className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Personalizado</div>
+                  <div className="text-lg font-black">Escolha seu valor</div>
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4 items-center">
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Valor em R$</label>
+                  <div className="relative mt-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">R$</span>
+                    <Input
+                      type="number"
+                      min="5"
+                      step="1"
+                      value={customBRL}
+                      onChange={(e) => setCustomBRL(e.target.value)}
+                      className="pl-10 h-12 text-xl font-black tabular-nums"
+                      placeholder="25"
+                    />
                   </div>
-                  <div>
-                    <div className="text-sm font-black">{it.title}</div>
-                    <div className="text-[11px] text-muted-foreground">{it.desc}</div>
+                  <div className="text-[10px] text-muted-foreground mt-1">Mínimo R$ 5,00</div>
+                </div>
+                <div className="rounded-xl bg-gradient-to-br from-primary/10 to-primary-glow/10 border border-primary/20 p-4">
+                  <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Você receberá</div>
+                  <div className="flex items-baseline gap-1.5 mt-0.5">
+                    <Coins className="h-4 w-4 text-primary" />
+                    <span className="text-2xl font-black tabular-nums">{formatCoins(customCoins)}</span>
+                    <span className="text-xs font-bold text-muted-foreground">coins</span>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    ≈ {coinsToDms(customCoins).toLocaleString("pt-BR")} DMs entregues
                   </div>
                 </div>
-              );
-            })}
+              </div>
+
+              <Button
+                onClick={buyCustom}
+                disabled={customLoading || customCoins === 0}
+                variant="discord"
+                size="lg"
+                className="font-black w-full md:w-auto md:min-w-[160px]"
+              >
+                {customLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4" /> Adicionar</>}
+              </Button>
+            </div>
+          </div>
+
+          {/* ================= SEÇÃO DE CONFIANÇA ================= */}
+          <div className="mt-10">
+            <div className="grid md:grid-cols-4 gap-4">
+              {[
+                { icon: ShieldCheck, title: "Pagamento seguro", desc: "Criptografia de ponta a ponta", color: "from-emerald-500 to-green-600" },
+                { icon: Bolt, title: "Entrega instantânea", desc: "Coins em segundos na conta", color: "from-amber-500 to-orange-500" },
+                { icon: Lock, title: "100% protegido", desc: "Dados nunca compartilhados", color: "from-sky-500 to-blue-600" },
+                { icon: TrendingUp, title: "Sem expiração", desc: "Use quando quiser, sem prazo", color: "from-fuchsia-500 to-pink-500" },
+              ].map((it) => {
+                const I = it.icon;
+                return (
+                  <div key={it.title} className="rounded-2xl border border-border bg-card p-4 flex items-start gap-3 hover:border-primary/30 transition">
+                    <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${it.color} grid place-items-center shrink-0 shadow-md`}>
+                      <I className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-black">{it.title}</div>
+                      <div className="text-[11px] text-muted-foreground leading-snug">{it.desc}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Métodos de pagamento */}
+            <div className="mt-5 flex items-center justify-center gap-3 flex-wrap text-xs text-muted-foreground">
+              <span className="font-bold">Aceitamos:</span>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-1 rounded-md bg-card border border-border font-black text-[11px] flex items-center gap-1">
+                  <span className="text-success">●</span> PIX
+                </span>
+                <span className="px-2.5 py-1 rounded-md bg-card border border-border font-black text-[11px] flex items-center gap-1">
+                  <CreditCard className="h-3 w-3" /> Crédito
+                </span>
+                <span className="px-2.5 py-1 rounded-md bg-card border border-border font-black text-[11px] flex items-center gap-1">
+                  <CreditCard className="h-3 w-3" /> Débito
+                </span>
+                <span className="px-2.5 py-1 rounded-md bg-card border border-border font-black text-[11px]">
+                  Boleto
+                </span>
+              </div>
+            </div>
           </div>
         </>
       )}
@@ -285,7 +401,6 @@ const Credits = () => {
             </div>
           ) : (
             <div className="rounded-2xl bg-card border border-border overflow-hidden">
-              {/* Header da tabela */}
               <div className="hidden md:grid grid-cols-[auto,1fr,140px,140px,160px] gap-4 px-5 py-3 bg-secondary/30 border-b border-border text-[10px] uppercase tracking-widest font-black text-muted-foreground">
                 <div className="w-10">Tipo</div>
                 <div>Descrição</div>
