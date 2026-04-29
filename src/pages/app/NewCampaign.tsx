@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ImageIcon, Loader2, Send, Save, X, Users, Coins, ExternalLink } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { ImageIcon, Loader2, Send, Save, X, Users, Coins, ExternalLink, Target } from "lucide-react";
 import { toast } from "sonner";
+import { CATEGORIES, dmsToCoins } from "@/lib/ads";
 
 const COLORS = ["#5865F2", "#57F287", "#FEE75C", "#EB459E", "#ED4245", "#9B59B6"];
 
@@ -26,14 +28,25 @@ const NewCampaign = () => {
   const [color, setColor] = useState("#5865F2");
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [reach, setReach] = useState(0);
+  const [category, setCategory] = useState<string>("all");
+  const [targetCount, setTargetCount] = useState(500);
+  const [maxReach, setMaxReach] = useState(0);
 
+  // Calcula alcance disponível pra categoria selecionada
   useEffect(() => {
-    supabase.from("discord_servers").select("member_count").then(({ data }) => {
-      const total = (data ?? []).reduce((s, x: any) => s + (x.member_count || 0), 0);
-      setReach(total);
+    let q = supabase.from("discord_servers").select("member_count, category").eq("bot_in_server", true);
+    q.then(({ data }) => {
+      const filtered = (data ?? []).filter((s: any) => category === "all" || s.category === category);
+      const total = filtered.reduce((s, x: any) => s + (x.member_count || 0), 0);
+      setMaxReach(total);
+      setTargetCount((c) => Math.min(c, Math.max(10, total)));
     });
-  }, []);
+  }, [category]);
+
+  const cost = useMemo(() => dmsToCoins(targetCount), [targetCount]);
+  const myCoins = profile?.credits ?? 0;
+  const maxByCoins = myCoins * 10;
+  const sliderMax = Math.max(10, Math.min(maxReach || 10000, maxByCoins || 10000, 100000));
 
   const uploadImage = async (file: File) => {
     if (!user) return;
@@ -48,9 +61,7 @@ const NewCampaign = () => {
     toast.success("Imagem enviada!");
   };
 
-  const validateUrl = (url: string) => {
-    try { new URL(url); return true; } catch { return false; }
-  };
+  const validateUrl = (url: string) => { try { new URL(url); return true; } catch { return false; } };
 
   const save = async (sendNow: boolean) => {
     if (!user || !profile) return;
@@ -58,7 +69,7 @@ const NewCampaign = () => {
     if (!title.trim()) return toast.error("Coloque um título");
     if (!message.trim()) return toast.error("Escreva a mensagem");
     if (buttonUrl && !validateUrl(buttonUrl)) return toast.error("URL do botão inválida");
-    if (sendNow && (profile.credits ?? 0) < 1) return toast.error("Sem créditos. Recarregue antes de enviar.");
+    if (sendNow && myCoins < cost) return toast.error(`Você precisa de ${cost} coins, tem apenas ${myCoins}`);
 
     setBusy(true);
     const { data, error } = await supabase.from("campaigns").insert({
@@ -66,6 +77,8 @@ const NewCampaign = () => {
       image_url: imageUrl || null, embed_color: color,
       button_label: buttonUrl ? buttonLabel : null,
       button_url: buttonUrl || null,
+      target_count: targetCount,
+      target_category: category,
       status: "draft",
     }).select().single();
 
@@ -73,8 +86,8 @@ const NewCampaign = () => {
 
     if (sendNow) {
       const { data: sd, error: se } = await supabase.functions.invoke("send-campaign", { body: { campaign_id: data.id } });
-      if (se || sd?.error) { setBusy(false); toast.error("Falha ao enviar: " + (sd?.error || se?.message)); return; }
-      toast.success(`Campanha em envio! Alcançando ${sd.targeted} membros.`);
+      if (se || sd?.error) { setBusy(false); toast.error("Falha: " + (sd?.error || se?.message)); return; }
+      toast.success(`Campanha disparada! Entregue para ${sd.delivered} pessoas.`);
       refreshProfile();
     } else {
       toast.success("Campanha salva como rascunho");
@@ -84,34 +97,68 @@ const NewCampaign = () => {
 
   const previewName = profile?.discord_username || "Anúncio";
   const previewAvatar = profile?.avatar_url;
+  const cat = CATEGORIES.find((c) => c.value === category) ?? CATEGORIES[0];
 
   return (
     <div className="grid lg:grid-cols-2 gap-6 max-w-7xl">
       <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); save(false); }}>
-        {/* Alcance e custo */}
-        <div className="rounded-xl bg-gradient-to-br from-primary/10 to-primary-glow/10 border border-primary/20 p-4 flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-2"><Users className="h-4 w-4 text-primary" /><div><div className="text-xs text-muted-foreground">Alcance estimado</div><div className="font-bold">{reach.toLocaleString("pt-BR")} pessoas</div></div></div>
-          <div className="flex items-center gap-2"><Coins className="h-4 w-4 text-primary" /><div><div className="text-xs text-muted-foreground">Custo</div><div className="font-bold">{reach} créditos</div></div></div>
-          <div className="ml-auto text-xs text-muted-foreground">Saldo: <span className="font-bold text-foreground">{profile?.credits ?? 0}</span></div>
+        {/* PÚBLICO + ORÇAMENTO — coração do Meta Ads */}
+        <div className="rounded-xl bg-card border border-border p-5 space-y-4">
+          <div className="flex items-center gap-2 text-sm font-bold"><Target className="h-4 w-4 text-primary" /> Público & orçamento</div>
+
+          <div>
+            <Label>Categoria de servidores</Label>
+            <div className="grid grid-cols-3 gap-1.5 mt-2">
+              {CATEGORIES.map((c) => (
+                <button key={c.value} type="button" onClick={() => setCategory(c.value)}
+                  className={`px-2 py-2 rounded-lg text-[11px] font-semibold border transition flex flex-col items-center gap-0.5 ${
+                    category === c.value ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/40"
+                  }`}>
+                  <span className="text-base leading-none">{c.emoji}</span>
+                  <span className="leading-tight text-center">{c.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <Label>Quantas pessoas alcançar</Label>
+              <span className="text-[10px] text-muted-foreground">Disponível: {maxReach.toLocaleString("pt-BR")}</span>
+            </div>
+            <Input
+              type="number" min={10} max={sliderMax} step={10}
+              value={targetCount}
+              onChange={(e) => setTargetCount(Math.max(10, Math.min(sliderMax, parseInt(e.target.value) || 10)))}
+              className="text-2xl font-bold h-14 text-center"
+            />
+            <Slider min={10} max={sliderMax} step={10} value={[targetCount]} onValueChange={([v]) => setTargetCount(v)} className="mt-3" />
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border">
+            <div><div className="text-[10px] text-muted-foreground uppercase">Custo</div><div className="font-bold flex items-center gap-1"><Coins className="h-3.5 w-3.5 text-primary" />{cost}</div></div>
+            <div><div className="text-[10px] text-muted-foreground uppercase">Saldo</div><div className={`font-bold ${myCoins >= cost ? "" : "text-destructive"}`}>{myCoins}</div></div>
+            <div><div className="text-[10px] text-muted-foreground uppercase">Saldo após</div><div className="font-bold">{Math.max(0, myCoins - cost)}</div></div>
+          </div>
+          <p className="text-[11px] text-muted-foreground">💡 1 coin = 10 DMs. Você só paga pelas DMs efetivamente entregues.</p>
         </div>
 
+        {/* CRIATIVO */}
         <div className="rounded-xl bg-card border border-border p-5 space-y-4">
+          <div className="text-sm font-bold">Criativo do anúncio</div>
           <div>
             <Label htmlFor="name">Nome interno</Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Promo de inverno" className="mt-2" maxLength={100} />
           </div>
-
           <div>
-            <Label htmlFor="title">Título do anúncio</Label>
+            <Label htmlFor="title">Título</Label>
             <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="🎉 Confira nossa loja!" className="mt-2" maxLength={120} />
           </div>
-
           <div>
             <Label htmlFor="message">Mensagem</Label>
-            <Textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Descreva o que você está divulgando. Suporta **negrito**, *itálico*, emojis 🎉" className="mt-2 min-h-[140px]" maxLength={2000} />
+            <Textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Suporta **negrito**, *itálico*, emojis 🎉" className="mt-2 min-h-[120px]" maxLength={2000} />
             <p className="text-xs text-muted-foreground mt-1">{message.length}/2000</p>
           </div>
-
           <div>
             <Label>Imagem (opcional)</Label>
             <div className="mt-2 flex items-center gap-2 flex-wrap">
@@ -125,7 +172,6 @@ const NewCampaign = () => {
               {imageUrl && <Button type="button" size="sm" variant="ghost" onClick={() => setImageUrl("")} className="gap-1"><X className="h-3 w-3" /> Remover</Button>}
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="bl">Texto do botão</Label>
@@ -133,10 +179,9 @@ const NewCampaign = () => {
             </div>
             <div>
               <Label htmlFor="bu">URL do botão</Label>
-              <Input id="bu" value={buttonUrl} onChange={(e) => setButtonUrl(e.target.value)} placeholder="https://discord.gg/..." className="mt-2" />
+              <Input id="bu" value={buttonUrl} onChange={(e) => setButtonUrl(e.target.value)} placeholder="https://..." className="mt-2" />
             </div>
           </div>
-
           <div>
             <Label>Cor da borda</Label>
             <div className="flex gap-2 mt-2 flex-wrap">
@@ -150,16 +195,22 @@ const NewCampaign = () => {
         </div>
 
         <div className="flex gap-2">
-          <Button type="submit" variant="secondary" disabled={busy} className="flex-1 gap-2"><Save className="h-4 w-4" /> Salvar rascunho</Button>
+          <Button type="submit" variant="secondary" disabled={busy} className="flex-1 gap-2"><Save className="h-4 w-4" /> Rascunho</Button>
           <Button type="button" variant="discord" disabled={busy} onClick={() => save(true)} className="flex-1 gap-2">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Salvar e disparar
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Disparar agora
           </Button>
         </div>
       </form>
 
-      {/* Discord DM Preview */}
-      <div className="lg:sticky lg:top-8 self-start">
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Preview da DM no Discord</div>
+      {/* PREVIEW */}
+      <div className="lg:sticky lg:top-8 self-start space-y-3">
+        <div className="rounded-xl bg-gradient-to-br from-primary/10 to-primary-glow/10 border border-primary/20 p-3 flex items-center justify-around text-center">
+          <div><div className="text-[10px] text-muted-foreground uppercase">Público</div><div className="font-bold text-sm flex items-center gap-1">{cat.emoji} {cat.label}</div></div>
+          <div><div className="text-[10px] text-muted-foreground uppercase">Alvo</div><div className="font-bold text-sm flex items-center gap-1"><Users className="h-3 w-3" />{targetCount.toLocaleString("pt-BR")}</div></div>
+          <div><div className="text-[10px] text-muted-foreground uppercase">Custo</div><div className="font-bold text-sm flex items-center gap-1"><Coins className="h-3 w-3 text-primary" />{cost}</div></div>
+        </div>
+
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Preview da DM no Discord</div>
         <div className="rounded-xl bg-[#313338] border border-[#1e1f22] p-4 shadow-2xl">
           <div className="flex items-center gap-2 pb-3 mb-3 border-b border-[#3f4147]">
             <span className="text-[#80848e] text-xs uppercase tracking-wider">Mensagem direta</span>
@@ -196,7 +247,6 @@ const NewCampaign = () => {
             </div>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-2 text-center">É exatamente assim que vai chegar na DM dos membros.</p>
       </div>
     </div>
   );

@@ -9,7 +9,6 @@ import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
 import AppLayout from "./layouts/AppLayout";
 import Dashboard from "./pages/app/Dashboard";
-import Network from "./pages/app/Network";
 import Campaigns from "./pages/app/Campaigns";
 import NewCampaign from "./pages/app/NewCampaign";
 import Credits from "./pages/app/Credits";
@@ -29,7 +28,6 @@ const App = () => (
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
             <Route index element={<Dashboard />} />
-            <Route path="rede" element={<Network />} />
             <Route path="campanhas" element={<Campaigns />} />
             <Route path="campanhas/nova" element={<NewCampaign />} />
             <Route path="creditos" element={<Credits />} />

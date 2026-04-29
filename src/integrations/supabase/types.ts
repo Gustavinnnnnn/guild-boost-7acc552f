@@ -21,6 +21,7 @@ export type Database = {
           created_at: string
           delivered_at: string | null
           error_message: string | null
+          failure_reason: string | null
           guild_id: string | null
           id: string
           recipient_discord_id: string
@@ -33,6 +34,7 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           error_message?: string | null
+          failure_reason?: string | null
           guild_id?: string | null
           id?: string
           recipient_discord_id: string
@@ -45,6 +47,7 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           error_message?: string | null
+          failure_reason?: string | null
           guild_id?: string | null
           id?: string
           recipient_discord_id?: string
@@ -69,12 +72,18 @@ export type Database = {
           credits_spent: number
           embed_color: string | null
           error_message: string | null
+          failed_blocked: number
+          failed_deleted: number
+          failed_dm_closed: number
+          failed_other: number
           id: string
           image_url: string | null
           message: string
           name: string
           sent_at: string | null
           status: string
+          target_category: string | null
+          target_count: number
           title: string
           total_clicks: number
           total_delivered: number
@@ -90,12 +99,18 @@ export type Database = {
           credits_spent?: number
           embed_color?: string | null
           error_message?: string | null
+          failed_blocked?: number
+          failed_deleted?: number
+          failed_dm_closed?: number
+          failed_other?: number
           id?: string
           image_url?: string | null
           message: string
           name: string
           sent_at?: string | null
           status?: string
+          target_category?: string | null
+          target_count?: number
           title?: string
           total_clicks?: number
           total_delivered?: number
@@ -111,12 +126,18 @@ export type Database = {
           credits_spent?: number
           embed_color?: string | null
           error_message?: string | null
+          failed_blocked?: number
+          failed_deleted?: number
+          failed_dm_closed?: number
+          failed_other?: number
           id?: string
           image_url?: string | null
           message?: string
           name?: string
           sent_at?: string | null
           status?: string
+          target_category?: string | null
+          target_count?: number
           title?: string
           total_clicks?: number
           total_delivered?: number
@@ -171,6 +192,7 @@ export type Database = {
       discord_servers: {
         Row: {
           bot_in_server: boolean | null
+          category: string | null
           created_at: string
           guild_id: string
           icon_url: string | null
@@ -183,6 +205,7 @@ export type Database = {
         }
         Insert: {
           bot_in_server?: boolean | null
+          category?: string | null
           created_at?: string
           guild_id: string
           icon_url?: string | null
@@ -195,6 +218,7 @@ export type Database = {
         }
         Update: {
           bot_in_server?: boolean | null
+          category?: string | null
           created_at?: string
           guild_id?: string
           icon_url?: string | null

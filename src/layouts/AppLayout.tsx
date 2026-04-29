@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Server, Megaphone, LogOut, Plus, Coins } from "lucide-react";
+import { LayoutDashboard, Megaphone, LogOut, Plus, Coins } from "lucide-react";
 import { DiscordIcon } from "@/components/DiscordIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 
 const nav = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/app/rede", label: "Rede do Bot", icon: Server, end: false },
   { to: "/app/campanhas", label: "Campanhas", icon: Megaphone, end: false },
   { to: "/app/creditos", label: "Créditos", icon: Coins, end: false },
 ];
