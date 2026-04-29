@@ -115,15 +115,16 @@ Deno.serve(async (req) => {
     // Sync silencioso da rede
     await syncGuilds(admin);
 
-    // Buscar servidores da rede (filtrados por categoria)
-    let q = admin.from("discord_servers").select("guild_id, name, category").eq("bot_in_server", true);
-    if (campaign.target_category && campaign.target_category !== "all") {
-      q = q.eq("category", campaign.target_category);
+    // Buscar servidores da rede (filtrados pelos nichos selecionados)
+    let q = admin.from("discord_servers").select("guild_id, name, niche").eq("bot_in_server", true);
+    const niches: string[] = Array.isArray(campaign.target_niches) ? campaign.target_niches : [];
+    if (niches.length > 0) {
+      q = q.in("niche", niches);
     }
     const { data: servers } = await q;
 
     if (!servers || servers.length === 0) {
-      await admin.from("campaigns").update({ status: "failed", error_message: "Nenhum servidor para esta categoria" }).eq("id", campaign_id);
+      await admin.from("campaigns").update({ status: "failed", error_message: "Nenhum servidor para os nichos selecionados" }).eq("id", campaign_id);
       return new Response(JSON.stringify({ error: "no_servers" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
