@@ -21,7 +21,7 @@ const Landing = () => {
             <a href="#beneficios" className="hover:text-foreground transition-smooth">Benefícios</a>
             <a href="#provas" className="hover:text-foreground transition-smooth">Resultados</a>
           </nav>
-          <Link to="/app">
+          <Link to="/auth">
             <Button variant="discord" size="sm" className="gap-2">
               <DiscordIcon className="h-4 w-4" />
               Entrar
@@ -68,7 +68,7 @@ const Landing = () => {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="mt-10 flex flex-col sm:flex-row gap-3 justify-center"
           >
-            <Link to="/app">
+            <Link to="/auth">
               <Button variant="discord" size="xl" className="gap-2 animate-pulse-glow">
                 <DiscordIcon className="h-5 w-5" />
                 Começar com Discord
@@ -217,7 +217,7 @@ const Landing = () => {
           <p className="text-muted-foreground mt-5 max-w-xl mx-auto text-lg">
             Comece gratuitamente. Pague só pelo que usar. Sem mensalidade.
           </p>
-          <Link to="/app" className="inline-block mt-8">
+          <Link to="/auth" className="inline-block mt-8">
             <Button variant="discord" size="xl" className="gap-2 animate-pulse-glow">
               <Rocket className="h-5 w-5" />
               Começar agora
