@@ -1,1 +1,7 @@
 project_id = "srwdikhfrfdmhlfdklzj"
+
+[functions.track-click]
+verify_jwt = false
+
+[functions.discord-oauth-callback]
+verify_jwt = false
