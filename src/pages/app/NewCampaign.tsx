@@ -157,7 +157,11 @@ const NewCampaign = () => {
 
     if (action === "send") {
       const { data: sd, error: se } = await supabase.functions.invoke("send-campaign", { body: { campaign_id: campaignId } });
-      if (se || sd?.error) { setBusy(false); toast.error("Falha: " + (sd?.error || se?.message)); return; }
+      let errMsg = sd?.error || se?.message;
+      if (se && (se as any).context && typeof (se as any).context.json === "function") {
+        try { const j = await (se as any).context.json(); errMsg = j?.error || errMsg; } catch {}
+      }
+      if (errMsg) { setBusy(false); toast.error(errMsg, { duration: 8000 }); return; }
       toast.success(`🚀 Campanha disparada! Entregue pra ${sd.delivered} pessoas.`);
       refreshProfile();
     } else {
