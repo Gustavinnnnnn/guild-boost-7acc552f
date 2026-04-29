@@ -106,17 +106,8 @@ const Servers = () => {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="rounded-2xl bg-card border border-border p-8 md:p-12 text-center">
-          <div className="inline-flex h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary-glow grid place-items-center shadow-glow mb-5">
-            <DiscordIcon className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-2xl md:text-3xl font-bold">Conecte sua conta do Discord</h1>
-          <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-            Pra começar, conecte sua conta do Discord. Vamos listar todos os servidores onde você é dono ou admin.
-          </p>
-          <Button variant="discord" size="xl" className="mt-6 gap-2" onClick={startDiscordOAuth} disabled={!discordClientId}>
-            <DiscordIcon className="h-5 w-5" /> Entrar com Discord
-          </Button>
-          {!discordClientId && <p className="text-xs text-muted-foreground mt-3">Carregando configuração...</p>}
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-sm text-muted-foreground mt-3">Sincronizando sua conta do Discord...</p>
         </div>
       </div>
     );

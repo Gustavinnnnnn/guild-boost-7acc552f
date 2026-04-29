@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import AppLayout from "./layouts/AppLayout";
 import Servers from "./pages/app/Servers";
 import Campaigns from "./pages/app/Campaigns";
@@ -23,6 +24,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
             <Route index element={<Navigate to="/app/servidores" replace />} />
             <Route path="servidores" element={<Servers />} />

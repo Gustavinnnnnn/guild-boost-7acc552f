@@ -1,41 +1,35 @@
-import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { DiscordIcon } from "@/components/DiscordIcon";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
 const Auth = () => {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "signup">("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [clientId, setClientId] = useState<string>("");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    supabase.functions.invoke("discord-config").then(({ data }) => {
+      if (data?.client_id) setClientId(data.client_id);
+    }).catch(() => {});
+  }, []);
 
   if (loading) return <div className="min-h-screen grid place-items-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (user) return <Navigate to="/app/servidores" replace />;
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const loginWithDiscord = () => {
+    if (!clientId) return toast.error("Configuração do Discord não carregada");
     setBusy(true);
-    if (mode === "signup") {
-      const { error } = await supabase.auth.signUp({
-        email, password,
-        options: { emailRedirectTo: `${window.location.origin}/app/servidores` },
-      });
-      if (error) toast.error(error.message);
-      else toast.success("Conta criada! Verifique seu email.");
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) toast.error(error.message);
-      else { toast.success("Bem-vindo!"); navigate("/app/servidores"); }
-    }
-    setBusy(false);
+    const state = btoa(JSON.stringify({ origin: window.location.origin, nonce: crypto.randomUUID() }));
+    const redirectUri = encodeURIComponent(`${SUPABASE_URL}/functions/v1/discord-oauth-callback`);
+    const scope = encodeURIComponent("identify email guilds");
+    window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=${state}&prompt=consent`;
   };
 
   return (
@@ -50,29 +44,15 @@ const Auth = () => {
           <p className="text-muted-foreground text-sm mt-1">Cresça seu servidor do Discord de verdade</p>
         </div>
 
-        <div className="rounded-2xl bg-card border border-border p-6 shadow-2xl">
-          <div className="flex gap-1 p-1 bg-secondary rounded-lg mb-5">
-            <button onClick={() => setMode("login")} className={`flex-1 py-2 rounded-md text-sm font-semibold transition ${mode === "login" ? "bg-card text-foreground" : "text-muted-foreground"}`}>Entrar</button>
-            <button onClick={() => setMode("signup")} className={`flex-1 py-2 rounded-md text-sm font-semibold transition ${mode === "signup" ? "bg-card text-foreground" : "text-muted-foreground"}`}>Criar conta</button>
-          </div>
-
-          <form onSubmit={submit} className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5" placeholder="seu@email.com" />
-            </div>
-            <div>
-              <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1.5" placeholder="Mínimo 6 caracteres" />
-            </div>
-            <Button type="submit" variant="discord" className="w-full" disabled={busy}>
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "login" ? "Entrar" : "Criar conta"}
-            </Button>
-          </form>
-
-          <p className="text-xs text-center text-muted-foreground mt-4">
-            Após entrar, conecte sua conta do Discord para listar seus servidores.
+        <div className="rounded-2xl bg-card border border-border p-8 shadow-2xl text-center">
+          <h2 className="text-lg font-semibold mb-2">Entre com sua conta do Discord</h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            Sem senha. Sem cadastro. Só clicar e autorizar.
           </p>
+          <Button variant="discord" size="xl" className="w-full gap-2" onClick={loginWithDiscord} disabled={!clientId || busy}>
+            {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <><DiscordIcon className="h-5 w-5" /> Entrar com Discord</>}
+          </Button>
+          {!clientId && <p className="text-xs text-muted-foreground mt-3">Carregando...</p>}
         </div>
       </div>
     </div>
