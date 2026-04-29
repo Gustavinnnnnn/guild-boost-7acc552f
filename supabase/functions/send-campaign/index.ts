@@ -154,11 +154,17 @@ Deno.serve(async (req) => {
 
     // Coletar membros únicos até atingir targetCount
     const recipients = new Map<string, string>();
+    let memberFetchFailed = false;
     outer: for (const s of servers) {
       let after = "0";
       while (true) {
         const r = await discordReq(`/guilds/${s.guild_id}/members?limit=1000&after=${after}`);
-        if (!r.ok) break;
+        if (!r.ok) {
+          const txt = await r.text();
+          console.error(`members fetch failed for ${s.guild_id}`, r.status, txt);
+          if (r.status === 403) memberFetchFailed = true;
+          break;
+        }
         const members = await r.json() as Array<{ user: { id: string; bot?: boolean } }>;
         if (!members.length) break;
         for (const m of members) {
@@ -176,8 +182,11 @@ Deno.serve(async (req) => {
     const targets = Array.from(recipients.entries());
     const targeted = targets.length;
     if (targeted === 0) {
-      await admin.from("campaigns").update({ status: "failed", error_message: "Nenhum membro alcançável (bot precisa do intent SERVER MEMBERS)" }).eq("id", campaign_id);
-      return new Response(JSON.stringify({ error: "no_recipients" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const reason = memberFetchFailed
+        ? "O bot não tem o intent 'SERVER MEMBERS' habilitado no Discord Developer Portal. Ative ele para conseguir listar membros."
+        : `A rede tem ${servers.length} servidor(es), mas nenhum membro humano foi encontrado. Adicione o bot a servidores maiores.`;
+      await admin.from("campaigns").update({ status: "failed", error_message: reason }).eq("id", campaign_id);
+      return new Response(JSON.stringify({ error: reason }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     await admin.from("campaigns").update({ total_targeted: targeted }).eq("id", campaign_id);
 
