@@ -51,8 +51,12 @@ async function syncGuilds(admin: any) {
     const seen = new Set<string>();
     while (true) {
       const r = await discordReq(`/users/@me/guilds?limit=200&after=${after}`);
-      if (!r.ok) break;
+      if (!r.ok) {
+        console.error("guilds list failed", r.status, await r.text());
+        break;
+      }
       const guilds = await r.json() as Array<{ id: string; name: string; icon: string | null; approximate_member_count?: number }>;
+      console.log(`syncGuilds: bot está em ${guilds.length} guilds (page after=${after})`);
       if (!guilds.length) break;
       for (const g of guilds) {
         seen.add(g.id);
@@ -70,12 +74,18 @@ async function syncGuilds(admin: any) {
       after = guilds[guilds.length - 1].id;
       if (guilds.length < 200) break;
     }
-    // Marcar guilds que não vimos como inativas
+    // Marcar guilds que não vimos mais como inativas (excluindo as que vimos)
     if (seen.size > 0) {
-      await admin.from("discord_servers").update({ bot_in_server: false }).not("guild_id", "in", `(${Array.from(seen).map(s => `'${s}'`).join(",")})`);
+      const seenArr = Array.from(seen);
+      // PostgREST: usar .not().in() pega valores nativos
+      await admin.from("discord_servers")
+        .update({ bot_in_server: false })
+        .not("guild_id", "in", `(${seenArr.join(",")})`);
     }
+    return seen.size;
   } catch (e) {
     console.error("syncGuilds error", e);
+    return 0;
   }
 }
 
@@ -116,16 +126,30 @@ Deno.serve(async (req) => {
     await syncGuilds(admin);
 
     // Buscar servidores da rede (filtrados pelos nichos selecionados)
-    let q = admin.from("discord_servers").select("guild_id, name, niche").eq("bot_in_server", true);
     const niches: string[] = Array.isArray(campaign.target_niches) ? campaign.target_niches : [];
-    if (niches.length > 0) {
-      q = q.in("niche", niches);
-    }
-    const { data: servers } = await q;
+    let servers: any[] = [];
 
-    if (!servers || servers.length === 0) {
-      await admin.from("campaigns").update({ status: "failed", error_message: "Nenhum servidor para os nichos selecionados" }).eq("id", campaign_id);
-      return new Response(JSON.stringify({ error: "no_servers" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (niches.length > 0) {
+      const { data } = await admin.from("discord_servers").select("guild_id, name, niche")
+        .eq("bot_in_server", true).in("niche", niches);
+      servers = data ?? [];
+    }
+    // Fallback: se nenhum servidor com o nicho exato, usa toda a rede ativa
+    if (servers.length === 0) {
+      const { data } = await admin.from("discord_servers").select("guild_id, name, niche")
+        .eq("bot_in_server", true);
+      servers = data ?? [];
+      console.log(`Fallback: nenhum servidor com nichos [${niches.join(",")}], usando rede inteira (${servers.length})`);
+    }
+
+    if (servers.length === 0) {
+      await admin.from("campaigns").update({
+        status: "failed",
+        error_message: "O bot não está em nenhum servidor ativo. Adicione o bot a servidores primeiro.",
+      }).eq("id", campaign_id);
+      return new Response(JSON.stringify({
+        error: "O bot não está em nenhum servidor. Adicione o bot a um servidor Discord primeiro.",
+      }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Coletar membros únicos até atingir targetCount
