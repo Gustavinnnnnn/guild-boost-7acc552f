@@ -109,8 +109,8 @@ Deno.serve(async (req) => {
     }
 
     const targetCount = campaign.target_count || 100;
-    // Custo em COINS: 1 coin = 10 DMs
-    const requiredCoins = Math.ceil(targetCount / 10);
+    // Custo em COINS: 1 coin = 1 DM
+    const requiredCoins = targetCount;
 
     const { data: profile } = await admin.from("profiles").select("credits").eq("id", userId).single();
     if (!profile || profile.credits < requiredCoins) {
