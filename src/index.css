@@ -132,4 +132,13 @@
       hsl(var(--background));
     background-size: auto, auto, 64px 64px, 64px 64px, auto;
   }
+  .bg-landing-stage {
+    background:
+      linear-gradient(90deg, hsl(var(--primary) / 0.16) 0 1px, transparent 1px 100%),
+      linear-gradient(0deg, hsl(var(--primary) / 0.1) 0 1px, transparent 1px 100%),
+      radial-gradient(ellipse at 18% 18%, hsl(var(--primary) / 0.28), transparent 34%),
+      radial-gradient(ellipse at 84% 22%, hsl(var(--success) / 0.18), transparent 30%),
+      linear-gradient(135deg, hsl(var(--background)), hsl(var(--card)) 58%, hsl(var(--background)));
+    background-size: 44px 44px, 44px 44px, auto, auto, auto;
+  }
 }
