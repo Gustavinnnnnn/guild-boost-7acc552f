@@ -177,7 +177,7 @@ const Campaigns = () => {
                       <div className="p-2.5 rounded-lg bg-destructive/10">
                         <div className="text-[10px] text-destructive uppercase font-bold">Falhas</div>
                         <div className="font-black text-destructive mt-0.5">{c.total_failed.toLocaleString("pt-BR")}</div>
-                        {c.credits_spent > 0 && <div className="text-[9px] text-muted-foreground mt-0.5">Custo: <b className="text-foreground">{c.credits_spent} coins</b></div>}
+                        {c.credits_spent > 0 && <div className="text-[9px] text-muted-foreground mt-0.5">Custo: <b className="text-foreground">{c.credits_spent} DMs</b></div>}
                       </div>
                     </div>
                     {c.total_failed > 0 && (

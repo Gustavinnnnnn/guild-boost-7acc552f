@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         amount: amountCents,
-        description: `${totalCoins} coins CoinsDM`,
+        description: `${totalCoins} DMs CoinsDM`,
         reference,
         source: "api_externa",
         customer: {

@@ -132,7 +132,7 @@ const NewCampaign = () => {
     if (!message.trim()) return toast.error("Escreva a mensagem");
     if (buttonUrl && !validateUrl(buttonUrl)) return toast.error("URL do botão inválida");
     if (action === "send" && selectedNiches.length === 0) return toast.error("Selecione ao menos 1 nicho de público");
-    if (action === "send" && myCoins < cost) return toast.error(`Você precisa de ${cost} coins, tem apenas ${myCoins}`);
+    if (action === "send" && myCoins < cost) return toast.error(`Você precisa de ${cost} DMs, tem apenas ${myCoins}`);
 
     setBusy(true);
     const payload = {

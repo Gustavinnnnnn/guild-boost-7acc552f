@@ -5,10 +5,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
 import {
-  Coins, Megaphone, Send, MousePointerClick, Plus, Users, Ban, MailX,
+  MessageCircle, Megaphone, Send, MousePointerClick, Plus, Users, Ban, MailX,
   UserX, AlertTriangle, TrendingUp, Sparkles, ArrowUpRight, Zap,
 } from "lucide-react";
-import { formatCoins, coinsToDms } from "@/lib/ads";
+
+const formatDMs = (n: number) => n.toLocaleString("pt-BR");
+const formatBRL = (cents: number) =>
+  (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 const Card = ({ icon: Icon, label, value, accent, sub, gradient }: { icon: any; label: string; value: string | number; accent?: string; sub?: string; gradient?: string }) => (
   <div className={`group relative rounded-2xl border border-border p-4 overflow-hidden transition-all hover:border-primary/40 hover:-translate-y-0.5 ${gradient ?? "bg-card"}`}>
@@ -61,8 +64,7 @@ const Dashboard = () => {
   const ctr = s.delivered > 0 ? ((s.clicks / s.delivered) * 100).toFixed(2) : "0.00";
   const deliveryRate = s.targeted > 0 ? ((s.delivered / s.targeted) * 100).toFixed(1) : "0.0";
   const blockRate = s.targeted > 0 ? ((s.blocked / s.targeted) * 100).toFixed(1) : "0.0";
-  const coins = profile?.credits ?? 0;
-  const reachableDms = coinsToDms(coins);
+  const dms = profile?.credits ?? 0;
 
   return (
     <div className="max-w-7xl space-y-7">
@@ -78,18 +80,18 @@ const Dashboard = () => {
               <Sparkles className="h-3 w-3" /> Olá {profile?.discord_username || profile?.username || ""}
             </div>
             <div className="flex items-baseline gap-2 flex-wrap">
-              <Coins className="h-7 w-7 opacity-80" />
-              <span className="text-5xl md:text-7xl font-black tracking-tighter">{formatCoins(coins)}</span>
-              <span className="text-2xl font-bold opacity-70">coins</span>
+              <MessageCircle className="h-7 w-7 opacity-80" />
+              <span className="text-5xl md:text-7xl font-black tracking-tighter">{formatDMs(dms)}</span>
+              <span className="text-2xl font-bold opacity-70">DMs</span>
             </div>
             <p className="text-sm opacity-90">
-              ≈ <strong>{reachableDms.toLocaleString("pt-BR")}</strong> pessoas alcançáveis · <span className="opacity-75">1 coin = 10 DMs</span>
+              ≈ <strong>{formatBRL(dms * 5)}</strong> em saldo · <span className="opacity-75">1 DM = R$ 0,05</span>
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <Link to="/app/creditos">
               <Button variant="secondary" className="gap-2 backdrop-blur bg-white/20 border border-white/20 text-white hover:bg-white/30">
-                <Plus className="h-4 w-4" /> Adicionar coins
+                <Plus className="h-4 w-4" /> Comprar DMs
               </Button>
             </Link>
             <Link to="/app/campanhas/nova">
@@ -112,7 +114,7 @@ const Dashboard = () => {
           <Card icon={Send} label="Campanhas" value={s.sent} sub={`${s.campaigns} no total`} />
           <Card icon={Users} label="Alcance total" value={s.delivered.toLocaleString("pt-BR")} sub={`${deliveryRate}% de entrega`} gradient="bg-gradient-to-br from-success/10 to-card" />
           <Card icon={MousePointerClick} label="Cliques (CTR)" value={`${ctr}%`} accent="text-primary" sub={`${s.clicks.toLocaleString("pt-BR")} cliques`} gradient="bg-gradient-to-br from-primary/10 to-card" />
-          <Card icon={Coins} label="Coins gastos" value={formatCoins(s.spent)} sub="lifetime" />
+          <Card icon={MessageCircle} label="DMs enviadas" value={formatDMs(s.spent)} sub="lifetime" />
         </div>
       </section>
 
@@ -153,7 +155,7 @@ const Dashboard = () => {
                   <div className="grid grid-cols-3 gap-2 mt-3 text-center">
                     <div><div className="text-[9px] text-muted-foreground uppercase">Alcance</div><div className="font-black text-sm">{c.total_delivered}</div></div>
                     <div><div className="text-[9px] text-muted-foreground uppercase">CTR</div><div className="font-black text-sm text-primary">{ctr}%</div></div>
-                    <div><div className="text-[9px] text-muted-foreground uppercase">Custo</div><div className="font-black text-sm">{c.credits_spent} <span className="text-[9px] text-muted-foreground font-normal">coins</span></div></div>
+                    <div><div className="text-[9px] text-muted-foreground uppercase">Custo</div><div className="font-black text-sm">{c.credits_spent} <span className="text-[9px] text-muted-foreground font-normal">DMs</span></div></div>
                   </div>
                 </div>
               );
