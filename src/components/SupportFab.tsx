@@ -27,7 +27,7 @@ export const SupportFab = () => {
   }, [open]);
 
   return (
-    <div ref={ref} className="fixed bottom-6 right-6 z-[60] flex flex-col items-end">
+    <div ref={ref} className="fixed bottom-4 right-4 z-[60] flex flex-col items-end sm:bottom-6 sm:right-6">
       {/* Popover */}
       <div
         className={`mb-3 w-[280px] origin-bottom-right rounded-2xl border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden transition-all duration-200 ${
@@ -76,7 +76,7 @@ export const SupportFab = () => {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Fechar suporte" : "Abrir suporte"}
-        className="group relative h-24 w-24 grid place-items-center transition-transform hover:scale-110 active:scale-95"
+          className="group relative h-14 w-14 grid place-items-center transition-transform hover:scale-105 active:scale-95 sm:h-24 sm:w-24"
       >
         {/* Glow */}
         <span className="absolute inset-2 rounded-full bg-[#5865F2]/50 blur-2xl opacity-80 group-hover:opacity-100 transition-opacity animate-pulse" aria-hidden="true" />
@@ -85,10 +85,13 @@ export const SupportFab = () => {
             <X className="h-6 w-6 text-foreground" />
           </span>
         ) : (
+          <span className="relative grid h-14 w-14 place-items-center rounded-full border border-border bg-card shadow-lg sm:hidden">
+            <DiscordIcon className="h-6 w-6 text-primary" />
+          </span>
           <img
             src={supportMascot}
             alt="Suporte"
-            className="relative h-24 w-24 object-contain drop-shadow-[0_6px_20px_rgba(88,101,242,0.6)]"
+            className="relative hidden h-24 w-24 object-contain drop-shadow-[0_6px_20px_rgba(88,101,242,0.6)] sm:block"
             draggable={false}
           />
         )}
