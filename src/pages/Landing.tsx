@@ -195,7 +195,7 @@ const Landing = () => {
               <p className="mt-7 text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed">
                 A gente coloca o link do seu servidor, loja ou projeto na DM de pessoas reais
                 do Discord — dentro do seu nicho. A partir de{" "}
-                <span className="text-foreground font-semibold">R$ 0,25 por DM</span>.
+                <span className="text-foreground font-semibold">R$ 0,05 por DM</span>.
               </p>
 
               <div className="mt-9 flex flex-col sm:flex-row items-center lg:items-stretch justify-center lg:justify-start gap-3">
@@ -236,7 +236,7 @@ const Landing = () => {
               </div>
 
               <p className="mt-6 text-xs text-muted-foreground font-mono">
-                ⚡ login em 5s · sem cartão · mínimo R$ 25
+                ⚡ login em 5s · sem cartão · mínimo R$ 30
               </p>
             </div>
 
@@ -572,50 +572,53 @@ const Landing = () => {
               </span>
             </div>
             <h2 className="font-display font-bold text-3xl md:text-5xl leading-tight tracking-tight">
-              A partir de <span className="text-gradient">R$ 0,25</span> por DM. Sem mensalidade.
+              <span className="text-gradient">R$ 0,05</span> por DM. Sem mensalidade.
             </h2>
             <p className="mt-5 text-muted-foreground text-base md:text-lg">
-              Você paga pelo que usa. Mínimo R$ 25. Quanto maior o pacote, mais barato fica a DM.
+              Escolhe o plano, paga via PIX e os créditos caem na hora. Quanto maior, mais bônus.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
             {[
               {
                 name: "Starter",
-                price: 25,
-                dms: 100,
+                price: 30,
+                dms: 600,
                 bonus: null,
-                pricePerDm: "0,25",
                 sub: "Pra testar",
-                features: ["100 DMs entregues", "R$ 0,25 por DM", "Dashboard completo", "Suporte via Discord"],
+                features: ["600 DMs entregues", "Dashboard completo", "Suporte via Discord"],
+              },
+              {
+                name: "Plus",
+                price: 50,
+                dms: 1100,
+                bonus: "+100 bônus",
+                sub: "Bom custo-benefício",
+                features: ["1.000 DMs + 100 bônus", "Segmentação por nicho", "Dashboard completo", "Suporte via Discord"],
               },
               {
                 name: "Pro",
-                price: 100,
-                dms: 550,
-                bonus: "+50 DMs grátis",
-                pricePerDm: "0,18",
+                price: 150,
+                dms: 3500,
+                bonus: "+500 bônus",
                 sub: "Mais escolhido",
                 highlight: true,
                 features: [
-                  "550 DMs entregues",
-                  "R$ 0,18 por DM (bônus)",
+                  "3.000 DMs + 500 bônus",
                   "Segmentação por nicho",
-                  "Dashboard completo",
+                  "Métricas em tempo real",
                   "Suporte prioritário",
                 ],
               },
               {
                 name: "Business",
                 price: 250,
-                dms: 1250,
-                bonus: "+150 DMs grátis",
-                pricePerDm: "0,20",
+                dms: 6000,
+                bonus: "+1.000 bônus",
                 sub: "Pra escalar",
                 features: [
-                  "1.250 DMs entregues",
-                  "R$ 0,20 por DM (bônus)",
+                  "5.000 DMs + 1.000 bônus",
                   "Segmentação avançada",
                   "Métricas em tempo real",
                   "Suporte VIP no Discord",
@@ -624,43 +627,46 @@ const Landing = () => {
             ].map((p) => (
               <div
                 key={p.name}
-                className={`relative rounded-2xl p-7 md:p-8 transition-all hover:-translate-y-1 ${
+                className={`relative rounded-2xl p-6 md:p-7 transition-all hover:-translate-y-1 ${
                   p.highlight
-                    ? "bg-gradient-primary text-primary-foreground shadow-glow scale-[1.02] md:scale-105"
+                    ? "bg-gradient-primary text-primary-foreground shadow-glow lg:scale-[1.04]"
                     : "bg-card border border-border hover:border-primary/40"
                 }`}
               >
                 {p.highlight && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-foreground text-background text-[11px] font-bold uppercase tracking-widest">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-foreground text-background text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">
                     Mais escolhido
                   </span>
                 )}
-                <div className={`text-xs font-mono uppercase tracking-widest mb-2 ${p.highlight ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                <div className={`text-[10px] font-mono uppercase tracking-widest mb-2 ${p.highlight ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
                   {p.sub}
                 </div>
-                <h3 className="font-display font-bold text-2xl">{p.name}</h3>
+                <h3 className="font-display font-bold text-xl">{p.name}</h3>
 
-                <div className="mt-5 flex items-baseline gap-2">
-                  <span className="font-display font-bold text-5xl tracking-tight">R${p.price}</span>
-                  <span className={`text-sm ${p.highlight ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                    à vista no PIX
+                <div className="mt-4 flex items-baseline gap-1.5">
+                  <span className="font-display font-bold text-4xl tracking-tight">R${p.price}</span>
+                  <span className={`text-xs ${p.highlight ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                    PIX
                   </span>
                 </div>
 
-                <div className={`mt-3 text-base font-semibold ${p.highlight ? "" : "text-foreground"}`}>
-                  = {p.dms.toLocaleString("pt-BR")} DMs
+                <div className={`mt-2 text-sm font-semibold flex flex-wrap items-center gap-x-2 gap-y-1 ${p.highlight ? "" : "text-foreground"}`}>
+                  <span>{p.dms.toLocaleString("pt-BR")} DMs</span>
                   {p.bonus && (
-                    <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${p.highlight ? "bg-foreground text-background" : "bg-success/15 text-success"}`}>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${p.highlight ? "bg-foreground text-background" : "bg-success/15 text-success"}`}>
                       {p.bonus}
                     </span>
                   )}
                 </div>
+                <div className={`text-[11px] mt-1 ${p.highlight ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                  ≈ R$ {(p.price / p.dms).toFixed(3).replace(".", ",")} por DM
+                </div>
 
-                <div className={`mt-6 h-px ${p.highlight ? "bg-primary-foreground/20" : "bg-border"}`} />
+                <div className={`mt-5 h-px ${p.highlight ? "bg-primary-foreground/20" : "bg-border"}`} />
 
-                <ul className="mt-6 space-y-3 text-sm">
+                <ul className="mt-5 space-y-2.5 text-sm">
                   {p.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2.5">
+                    <li key={f} className="flex items-start gap-2">
                       <Check className={`h-4 w-4 mt-0.5 shrink-0 ${p.highlight ? "" : "text-primary"}`} />
                       <span>{f}</span>
                     </li>
@@ -670,20 +676,20 @@ const Landing = () => {
                 <button
                   onClick={loginWithDiscord}
                   disabled={busy}
-                  className={`mt-7 w-full h-12 rounded-full font-semibold text-sm transition-colors inline-flex items-center justify-center gap-2 ${
+                  className={`mt-6 w-full h-11 rounded-full font-semibold text-sm transition-colors inline-flex items-center justify-center gap-2 ${
                     p.highlight
                       ? "bg-foreground text-background hover:bg-background hover:text-foreground"
                       : "bg-primary text-primary-foreground hover:bg-primary-glow"
                   }`}
                 >
-                  <DiscordIcon className="h-4 w-4" /> Quero esse plano
+                  <DiscordIcon className="h-4 w-4" /> Escolher
                 </button>
               </div>
             ))}
           </div>
 
           <p className="mt-8 text-center text-sm text-muted-foreground">
-            Ou compra qualquer valor a partir de R$ 25 — escolhe o quanto quer depositar.
+            Mínimo R$ 30. Pode comprar qualquer valor acima — sempre R$ 0,05 por DM.
           </p>
         </div>
       </section>
@@ -760,7 +766,7 @@ const Landing = () => {
               },
               {
                 q: "Quanto custa exatamente cada DM?",
-                a: "A partir de R$ 0,25 por DM. R$ 25 = 100 DMs. R$ 100 = 550 DMs (com bônus, sai R$ 0,18/DM). R$ 250 = 1.250 DMs (com bônus, sai R$ 0,20/DM). Quanto maior o pacote, mais barato fica.",
+                a: "R$ 0,05 por DM. Plano Starter: R$ 30 = 600 DMs. Plus: R$ 50 = 1.100 DMs (com bônus). Pro: R$ 150 = 3.500 DMs (com bônus). Business: R$ 250 = 6.000 DMs (com bônus). Quanto maior o plano, mais bônus.",
               },
               {
                 q: "Em quanto tempo a campanha começa?",
@@ -825,7 +831,7 @@ const Landing = () => {
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
               </button>
               <p className="mt-4 text-xs text-primary-foreground/70">
-                Login em 5s · Sem cartão · Mínimo R$ 25
+                Login em 5s · Sem cartão · Mínimo R$ 30
               </p>
             </div>
           </div>

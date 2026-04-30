@@ -12,9 +12,9 @@ const PARADISE_API_KEY = Deno.env.get("PARADISE_API_KEY")!;
 
 const PARADISE_URL = "https://multi.paradisepags.com/api/v1/transaction.php";
 
-// 1 coin = 1 DM · 1 coin = R$ 0,25 → 25 centavos
-const CENTS_PER_COIN = 25;
-const MIN_COINS = 100; // R$ 25,00 mínimo
+// 1 coin = 1 DM · 1 coin = R$ 0,05 → 5 centavos
+const CENTS_PER_COIN = 5;
+const MIN_COINS = 600; // R$ 30,00 mínimo
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });

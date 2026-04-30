@@ -19,10 +19,10 @@ type Tx = {
   description: string | null; balance_after: number; created_at: string;
 };
 
-// 1 DM = R$ 0,25  (internamente armazenado como "coins" no DB, mas exibimos sempre como DMs)
-const PRICE_PER_DM = 0.25;
-const MIN_DEPOSIT_BRL = 25;
-const MIN_DMS = Math.round(MIN_DEPOSIT_BRL / PRICE_PER_DM); // 100
+// 1 DM = R$ 0,05  (internamente armazenado como "coins" no DB, mas exibimos sempre como DMs)
+const PRICE_PER_DM = 0.05;
+const MIN_DEPOSIT_BRL = 30;
+const MIN_DMS = Math.round(MIN_DEPOSIT_BRL / PRICE_PER_DM); // 600
 
 const dmsToBRL = (dms: number) => dms * PRICE_PER_DM;
 const brlToDms = (brl: number) => Math.floor(brl / PRICE_PER_DM);
@@ -33,17 +33,22 @@ const formatDMs = (n: number) => n.toLocaleString("pt-BR");
 
 const PACKAGES = [
   {
-    dms: 100, bonus: 0, priceBRL: 25, icon: Zap, label: "Starter",
+    dms: 600, bonus: 0, priceBRL: 30, icon: Zap, label: "Starter",
     desc: "Pra testar a plataforma", popular: false,
     accent: "from-sky-500 to-cyan-400",
   },
   {
-    dms: 500, bonus: 50, priceBRL: 100, icon: Rocket, label: "Pro",
+    dms: 1000, bonus: 100, priceBRL: 50, icon: Rocket, label: "Plus",
+    desc: "Bom custo-benefício", popular: false,
+    accent: "from-emerald-500 to-teal-400",
+  },
+  {
+    dms: 3000, bonus: 500, priceBRL: 150, icon: Crown, label: "Pro",
     desc: "O mais escolhido", popular: true,
     accent: "from-primary to-primary-glow",
   },
   {
-    dms: 1100, bonus: 150, priceBRL: 250, icon: Crown, label: "Business",
+    dms: 5000, bonus: 1000, priceBRL: 250, icon: Sparkles, label: "Business",
     desc: "Pra campanhas grandes", popular: false,
     accent: "from-amber-400 to-orange-500",
   },
@@ -168,7 +173,7 @@ const Credits = () => {
                 <span className="text-xs text-muted-foreground font-bold">DMs</span>
               </div>
               <div className="text-[11px] text-muted-foreground">
-                ≈ <b className="text-foreground">{formatBRL(dmsToBRL(dms))}</b> · 1 DM = R$ 0,25
+                ≈ <b className="text-foreground">{formatBRL(dmsToBRL(dms))}</b> · 1 DM = R$ 0,05
               </div>
             </div>
           </div>
@@ -202,10 +207,10 @@ const Credits = () => {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="px-2.5 py-1 rounded-lg bg-card border border-border font-bold">1 DM = R$ 0,25</span>
-          <span className="px-2.5 py-1 rounded-lg bg-card border border-border font-bold">R$ 25 = 100 DMs</span>
-          <span className="px-2.5 py-1 rounded-lg bg-card border border-border font-bold">R$ 100 = 500 DMs</span>
-          <span className="px-2.5 py-1 rounded-lg bg-card border border-border font-bold">R$ 250 = 1.100 DMs</span>
+          <span className="px-2.5 py-1 rounded-lg bg-card border border-border font-bold">1 DM = R$ 0,05</span>
+          <span className="px-2.5 py-1 rounded-lg bg-card border border-border font-bold">R$ 30 = 600 DMs</span>
+          <span className="px-2.5 py-1 rounded-lg bg-card border border-border font-bold">R$ 50 = 1.100 DMs</span>
+          <span className="px-2.5 py-1 rounded-lg bg-card border border-border font-bold">R$ 150 = 3.500 DMs</span>
         </div>
       </div>
 
@@ -361,7 +366,7 @@ const Credits = () => {
                 {/* Atalhos */}
                 <div className="flex flex-wrap gap-1.5 mt-3">
                   <span className="text-[10px] text-muted-foreground self-center mr-1">Atalhos:</span>
-                  {[25, 50, 100, 150, 250, 500].map((v) => (
+                  {[30, 50, 100, 150, 250, 500].map((v) => (
                     <button
                       key={v}
                       onClick={() => setCustomBRL(String(v))}
