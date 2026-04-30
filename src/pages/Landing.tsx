@@ -288,13 +288,16 @@ const Landing = () => {
                       { icon: Send, value: "900", label: "DMs" },
                       { icon: MousePointerClick, value: "137", label: "cliques" },
                       { icon: Users, value: "62", label: "entradas" },
-                    ].map((metric) => (
-                      <div key={metric.label} className="bg-card p-4">
-                        <metric.icon className="mb-3 h-4 w-4 text-primary" />
-                        <div className="font-display text-3xl font-black leading-none">{metric.value}</div>
-                        <div className="mt-2 text-[10px] font-black uppercase text-muted-foreground">{metric.label}</div>
-                      </div>
-                    ))}
+                    ].map((metric) => {
+                      const Icon = metric.icon;
+                      return (
+                        <div key={metric.label} className="bg-card p-4">
+                          <Icon className="mb-3 h-4 w-4 text-primary" />
+                          <div className="font-display text-3xl font-black leading-none">{metric.value}</div>
+                          <div className="mt-2 text-[10px] font-black uppercase text-muted-foreground">{metric.label}</div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
