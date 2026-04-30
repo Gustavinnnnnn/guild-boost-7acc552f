@@ -584,7 +584,7 @@ const Landing = () => {
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
               </button>
               <p className="mt-4 text-xs text-primary-foreground/70">
-                Login em 5s · Sem cartão · Mínimo R$ 50
+                Login em 5s · Sem cartão · Mínimo R$ 25
               </p>
             </div>
           </div>
