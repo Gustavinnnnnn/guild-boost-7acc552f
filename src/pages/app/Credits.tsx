@@ -8,51 +8,52 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  Coins, Plus, ArrowDown, ArrowUp, Sparkles, Zap, Crown, Rocket, Loader2,
-  Gift, Activity, Check, ShieldCheck, Bolt, Calculator, Copy, QrCode,
-  Wallet, MessageCircle, Send, Target, Clock, CheckCircle2,
+  MessageCircle, Plus, ArrowDown, ArrowUp, Sparkles, Zap, Crown, Rocket, Loader2,
+  Gift, Activity, ShieldCheck, Bolt, Calculator, Copy, QrCode,
+  Wallet, Send, Target, Clock, CheckCircle2, Info,
 } from "lucide-react";
 import { toast } from "sonner";
-import { formatCoins, coinsToDms } from "@/lib/ads";
 
 type Tx = {
   id: string; amount: number; type: string;
   description: string | null; balance_after: number; created_at: string;
 };
 
-// 1 coin = 1 DM · 1 coin = R$ 0,05
-const PRICE_PER_COIN = 0.05;
+// 1 DM = R$ 0,05  (internamente armazenado como "coins" no DB, mas exibimos sempre como DMs)
+const PRICE_PER_DM = 0.05;
 const MIN_DEPOSIT_BRL = 20;
-const MIN_COINS = Math.round(MIN_DEPOSIT_BRL / PRICE_PER_COIN); // 400
-const coinsToBRL = (coins: number) => coins * PRICE_PER_COIN;
-const brlToCoins = (brl: number) => Math.floor(brl / PRICE_PER_COIN);
+const MIN_DMS = Math.round(MIN_DEPOSIT_BRL / PRICE_PER_DM); // 400
+
+const dmsToBRL = (dms: number) => dms * PRICE_PER_DM;
+const brlToDms = (brl: number) => Math.floor(brl / PRICE_PER_DM);
 
 const formatBRL = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const formatDMs = (n: number) => n.toLocaleString("pt-BR");
 
 const PACKAGES = [
   {
-    coins: 400, bonus: 0, priceBRL: 20, icon: Zap, label: "Starter",
-    desc: "Depósito mínimo", popular: false,
+    dms: 400, bonus: 0, priceBRL: 20, icon: Zap, label: "Starter",
+    desc: "Ideal pra testar", popular: false,
     accent: "from-sky-500 to-cyan-400",
   },
   {
-    coins: 1000, bonus: 100, priceBRL: 50, icon: Rocket, label: "Pro",
+    dms: 1000, bonus: 100, priceBRL: 50, icon: Rocket, label: "Pro",
     desc: "O mais escolhido", popular: true,
     accent: "from-primary to-primary-glow",
   },
   {
-    coins: 4000, bonus: 600, priceBRL: 200, icon: Crown, label: "Business",
+    dms: 4000, bonus: 600, priceBRL: 200, icon: Crown, label: "Business",
     desc: "Pra campanhas grandes", popular: false,
     accent: "from-amber-400 to-orange-500",
   },
 ];
 
 const HOW_STEPS = [
-  { icon: Wallet, title: "Compre coins", desc: "Pague via PIX e receba os coins na hora após confirmação." },
-  { icon: Target, title: "Crie sua campanha", desc: "Escreva sua mensagem, escolha o público e o número de pessoas." },
-  { icon: Send, title: "Bot envia DMs", desc: "Distribuímos sua mensagem em ritmo natural pra evitar bloqueio." },
-  { icon: Activity, title: "Acompanhe resultados", desc: "Veja entregas, cliques e métricas em tempo real no dashboard." },
+  { icon: Wallet, title: "Compre DMs", desc: "Pague via PIX e receba as DMs na hora após confirmação." },
+  { icon: Target, title: "Crie sua campanha", desc: "Escreva a mensagem e escolha o público que vai receber." },
+  { icon: Send, title: "Bot envia DMs", desc: "Distribuímos a mensagem em ritmo natural pra evitar bloqueio." },
+  { icon: Activity, title: "Acompanhe resultados", desc: "Veja entregas, cliques e métricas em tempo real." },
 ];
 
 type DepositInfo = {
@@ -60,7 +61,7 @@ type DepositInfo = {
   qr_code: string;
   qr_code_base64: string;
   amount_cents: number;
-  coins: number;
+  coins: number; // = DMs
   expires_at?: string;
 };
 
@@ -85,7 +86,6 @@ const Credits = () => {
 
   useEffect(() => { load(); }, [user]);
 
-  // Polling do status do pagamento
   useEffect(() => {
     if (!deposit || paid) {
       if (pollRef.current) { window.clearInterval(pollRef.current); pollRef.current = null; }
@@ -97,7 +97,7 @@ const Credits = () => {
       });
       if (data?.status === "approved") {
         setPaid(true);
-        toast.success(`+${formatCoins(deposit.coins)} coins creditados! 🎉`);
+        toast.success(`+${formatDMs(deposit.coins)} DMs creditadas! 🎉`);
         refresh();
         load();
       } else if (data?.status === "failed" || data?.status === "expired") {
@@ -108,11 +108,11 @@ const Credits = () => {
     return () => { if (pollRef.current) window.clearInterval(pollRef.current); };
   }, [deposit, paid, refresh]);
 
-  const startDeposit = async (coins: number, bonus: number, key: string) => {
+  const startDeposit = async (dms: number, bonus: number, key: string) => {
     setBuying(key);
     setPaid(false);
     const { data, error } = await supabase.functions.invoke("create-pix-deposit", {
-      body: { coins, bonus },
+      body: { coins: dms, bonus },
     });
     setBuying(null);
     if (error || !data?.success) {
@@ -125,27 +125,24 @@ const Credits = () => {
   const buyCustom = async () => {
     const brl = parseFloat(customBRL.replace(",", "."));
     if (!brl || brl < MIN_DEPOSIT_BRL) return toast.error(`Valor mínimo: ${formatBRL(MIN_DEPOSIT_BRL)}`);
-    const coins = brlToCoins(brl);
-    await startDeposit(coins, 0, "custom");
+    const dms = brlToDms(brl);
+    await startDeposit(dms, 0, "custom");
   };
 
-  const customCoins = useMemo(() => {
+  const customDms = useMemo(() => {
     const brl = parseFloat((customBRL || "0").replace(",", "."));
-    return isNaN(brl) ? 0 : brlToCoins(brl);
+    return isNaN(brl) ? 0 : brlToDms(brl);
   }, [customBRL]);
 
-  const coins = profile?.credits ?? 0;
-  const reach = coinsToDms(coins);
+  const dms = profile?.credits ?? 0;
 
-  const { totalSpent, totalBought, last7d } = useMemo(() => {
-    let spent = 0, bought = 0, recent = 0;
-    const now = Date.now();
+  const { totalSpent, totalBought } = useMemo(() => {
+    let spent = 0, bought = 0;
     txs.forEach((t) => {
       if (t.amount > 0) bought += t.amount;
       else spent += -t.amount;
-      if (now - new Date(t.created_at).getTime() < 7 * 86400000) recent += Math.abs(t.amount);
     });
-    return { totalSpent: spent, totalBought: bought, last7d: recent };
+    return { totalSpent: spent, totalBought: bought };
   }, [txs]);
 
   const copyPix = () => {
@@ -162,22 +159,22 @@ const Credits = () => {
         <div className="relative grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-border/60">
           <div className="col-span-2 p-5 flex items-center gap-4">
             <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-primary to-primary-glow grid place-items-center shadow-glow shrink-0">
-              <Coins className="h-7 w-7 text-white" />
+              <MessageCircle className="h-7 w-7 text-white" />
             </div>
             <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold">Saldo</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold">DMs disponíveis</div>
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black tracking-tighter tabular-nums">{formatCoins(coins)}</span>
-                <span className="text-xs text-muted-foreground font-bold">coins</span>
+                <span className="text-4xl font-black tracking-tighter tabular-nums">{formatDMs(dms)}</span>
+                <span className="text-xs text-muted-foreground font-bold">DMs</span>
               </div>
               <div className="text-[11px] text-muted-foreground">
-                ≈ <b className="text-foreground">{reach.toLocaleString("pt-BR")}</b> DMs · {formatBRL(coinsToBRL(coins))}
+                ≈ <b className="text-foreground">{formatBRL(dmsToBRL(dms))}</b> · 1 DM = R$ 0,05
               </div>
             </div>
           </div>
           {[
-            { icon: ArrowUp, label: "Comprado", value: totalBought, color: "text-success" },
-            { icon: ArrowDown, label: "Gasto", value: totalSpent, color: "text-destructive" },
+            { icon: ArrowUp, label: "Compradas", value: totalBought, color: "text-success" },
+            { icon: ArrowDown, label: "Enviadas", value: totalSpent, color: "text-destructive" },
           ].map((s) => {
             const I = s.icon;
             return (
@@ -185,10 +182,30 @@ const Credits = () => {
                 <div className={`flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-bold ${s.color}`}>
                   <I className="h-3 w-3" /> {s.label}
                 </div>
-                <div className="text-2xl font-black tabular-nums mt-1">{formatCoins(s.value)}</div>
+                <div className="text-2xl font-black tabular-nums mt-1">{formatDMs(s.value)}</div>
+                <div className="text-[10px] text-muted-foreground">DMs</div>
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* BANNER REGRA DE PREÇO */}
+      <div className="mb-6 rounded-2xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 via-primary-glow/5 to-transparent p-4 flex flex-wrap items-center gap-x-6 gap-y-2">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-primary/20 grid place-items-center">
+            <Info className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <div className="text-sm font-black">Como funciona o preço</div>
+            <div className="text-[11px] text-muted-foreground">Você paga por DM enviada — não por pessoa que entra no servidor.</div>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="px-2.5 py-1 rounded-lg bg-card border border-border font-bold">1 DM = R$ 0,05</span>
+          <span className="px-2.5 py-1 rounded-lg bg-card border border-border font-bold">R$ 1 = 20 DMs</span>
+          <span className="px-2.5 py-1 rounded-lg bg-card border border-border font-bold">R$ 20 = 400 DMs</span>
+          <span className="px-2.5 py-1 rounded-lg bg-card border border-border font-bold">R$ 100 = 2.000 DMs</span>
         </div>
       </div>
 
@@ -217,24 +234,23 @@ const Credits = () => {
 
       {tab === "shop" && (
         <>
-          {/* GRID PRINCIPAL: pacotes + custom */}
           <div className="grid lg:grid-cols-[1fr,360px] gap-5">
-            {/* Pacotes em grid compacto */}
             <div className="space-y-5">
               <div>
-                <h2 className="text-lg font-black tracking-tight">Pacotes</h2>
+                <h2 className="text-lg font-black tracking-tight">Pacotes de DMs</h2>
                 <p className="text-xs text-muted-foreground">Pagamento via PIX · liberação automática</p>
               </div>
 
               <div className="grid sm:grid-cols-3 gap-3">
                 {PACKAGES.map((p) => {
                   const I = p.icon;
-                  const total = p.coins + p.bonus;
-                  const key = String(p.coins);
+                  const total = p.dms + p.bonus;
+                  const key = String(p.dms);
+                  const pricePerDm = p.priceBRL / total;
                   return (
                     <button
                       key={key}
-                      onClick={() => startDeposit(p.coins, p.bonus, key)}
+                      onClick={() => startDeposit(p.dms, p.bonus, key)}
                       disabled={buying !== null}
                       className={`relative text-left rounded-2xl border-2 p-4 transition-all hover:-translate-y-0.5 ${
                         p.popular
@@ -244,9 +260,10 @@ const Credits = () => {
                     >
                       {p.popular && (
                         <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest text-white bg-gradient-to-r from-primary to-primary-glow shadow">
-                          Popular
+                          Mais escolhido
                         </div>
                       )}
+
                       <div className="flex items-center gap-2 mb-3">
                         <div className={`h-9 w-9 rounded-xl bg-gradient-to-br ${p.accent} grid place-items-center shadow`}>
                           <I className="h-4.5 w-4.5 text-white" />
@@ -256,21 +273,29 @@ const Credits = () => {
                           <div className="text-[10px] text-muted-foreground">{p.desc}</div>
                         </div>
                       </div>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-black tabular-nums">{formatCoins(p.coins)}</span>
-                        <span className="text-[11px] text-muted-foreground font-bold">coins</span>
+
+                      {/* DMs em destaque */}
+                      <div className="rounded-xl bg-secondary/40 border border-border/60 p-3 mb-3">
+                        <div className="flex items-baseline gap-1.5">
+                          <MessageCircle className="h-4 w-4 text-primary self-center" />
+                          <span className="text-3xl font-black tabular-nums leading-none">{formatDMs(total)}</span>
+                          <span className="text-xs font-black text-muted-foreground">DMs</span>
+                        </div>
+                        {p.bonus > 0 && (
+                          <div className="inline-flex items-center gap-1 mt-1.5 px-1.5 py-0.5 rounded bg-success/15 text-success text-[10px] font-black">
+                            <Gift className="h-2.5 w-2.5" /> {formatDMs(p.dms)} + {formatDMs(p.bonus)} bônus
+                          </div>
+                        )}
                       </div>
-                      {p.bonus > 0 && (
-                        <div className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded bg-success/15 text-success text-[10px] font-black">
-                          <Gift className="h-2.5 w-2.5" /> +{formatCoins(p.bonus)} bônus
-                        </div>
-                      )}
-                      <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between">
+
+                      <div className="flex items-end justify-between">
                         <div>
-                          <div className="text-lg font-black">{formatBRL(p.priceBRL)}</div>
-                          <div className="text-[10px] text-muted-foreground">{coinsToDms(total).toLocaleString("pt-BR")} DMs</div>
+                          <div className="text-xl font-black">{formatBRL(p.priceBRL)}</div>
+                          <div className="text-[10px] text-muted-foreground">
+                            ≈ {formatBRL(pricePerDm).replace("R$", "R$")} por DM
+                          </div>
                         </div>
-                        <div className={`h-8 w-8 rounded-lg bg-gradient-to-br ${p.accent} grid place-items-center`}>
+                        <div className={`h-9 w-9 rounded-lg bg-gradient-to-br ${p.accent} grid place-items-center`}>
                           {buying === key ? (
                             <Loader2 className="h-4 w-4 text-white animate-spin" />
                           ) : (
@@ -283,56 +308,77 @@ const Credits = () => {
                 })}
               </div>
 
-              {/* VALOR PERSONALIZADO */}
+              {/* CONVERSOR */}
               <div className="rounded-2xl border-2 border-dashed border-border bg-card/50 p-5">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 grid place-items-center shadow">
                     <Calculator className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <div className="text-sm font-black">Valor personalizado</div>
-                    <div className="text-[11px] text-muted-foreground">Escolha exatamente quanto quer depositar</div>
+                    <div className="text-sm font-black">Conversor — escolha o valor</div>
+                    <div className="text-[11px] text-muted-foreground">Digite quanto quer depositar e veja quantas DMs vai receber</div>
                   </div>
                 </div>
-                <div className="grid sm:grid-cols-[1fr,1fr,auto] gap-3 items-end">
+
+                <div className="grid sm:grid-cols-[1fr,auto,1fr,auto] gap-3 items-end">
                   <div>
-                    <label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Valor</label>
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Você paga</label>
                     <div className="relative mt-1">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">R$</span>
                       <Input
                         type="number" min={MIN_DEPOSIT_BRL} step="1"
                         value={customBRL}
                         onChange={(e) => setCustomBRL(e.target.value)}
-                        className="pl-10 h-11 text-lg font-black tabular-nums"
+                        className="pl-10 h-12 text-xl font-black tabular-nums"
                         placeholder="20"
                       />
                     </div>
                   </div>
-                  <div className="rounded-xl bg-gradient-to-br from-primary/10 to-primary-glow/10 border border-primary/20 px-3 py-2">
-                    <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Receberá</div>
+
+                  <div className="hidden sm:flex h-12 items-center justify-center text-2xl font-black text-muted-foreground pb-1">
+                    →
+                  </div>
+
+                  <div className="rounded-xl bg-gradient-to-br from-primary/15 to-primary-glow/15 border-2 border-primary/30 px-4 py-2.5">
+                    <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Você recebe</div>
                     <div className="flex items-baseline gap-1.5">
-                      <Coins className="h-3.5 w-3.5 text-primary" />
-                      <span className="text-lg font-black tabular-nums">{formatCoins(customCoins)}</span>
-                      <span className="text-[10px] font-bold text-muted-foreground">coins</span>
-                    </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {coinsToDms(customCoins).toLocaleString("pt-BR")} DMs
+                      <MessageCircle className="h-4 w-4 text-primary self-center" />
+                      <span className="text-2xl font-black tabular-nums">{formatDMs(customDms)}</span>
+                      <span className="text-xs font-black text-muted-foreground">DMs</span>
                     </div>
                   </div>
+
                   <Button
                     onClick={buyCustom}
-                    disabled={buying !== null || customCoins === 0}
+                    disabled={buying !== null || customDms < MIN_DMS}
                     variant="discord"
-                    className="h-11 font-black"
+                    className="h-12 font-black"
                   >
                     {buying === "custom" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><QrCode className="h-4 w-4" /> Gerar PIX</>}
                   </Button>
                 </div>
-                <div className="text-[10px] text-muted-foreground mt-2">Mínimo {formatBRL(MIN_DEPOSIT_BRL)} ({formatCoins(MIN_COINS)} coins)</div>
+
+                {/* Atalhos */}
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  <span className="text-[10px] text-muted-foreground self-center mr-1">Atalhos:</span>
+                  {[20, 30, 50, 100, 150, 300].map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => setCustomBRL(String(v))}
+                      className="px-2 py-1 rounded-lg bg-secondary/60 border border-border text-[11px] font-bold hover:border-primary/40 transition"
+                    >
+                      R$ {v}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="text-[10px] text-muted-foreground mt-2">
+                  Mínimo {formatBRL(MIN_DEPOSIT_BRL)} ({formatDMs(MIN_DMS)} DMs)
+                </div>
               </div>
             </div>
 
-            {/* SIDEBAR: COMO FUNCIONA */}
+            {/* SIDEBAR */}
             <aside className="space-y-3">
               <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-secondary/20 p-5">
                 <div className="flex items-center gap-2 mb-4">
@@ -375,12 +421,12 @@ const Credits = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <MessageCircle className="h-4 w-4 text-primary" />
-                  <span className="text-xs font-bold">1 coin = 1 DM (R$ 0,05)</span>
+                  <span className="text-xs font-bold">DMs não expiram</span>
                 </div>
               </div>
 
               <div className="rounded-xl bg-warning/10 border border-warning/30 p-3 text-[11px] text-warning-foreground">
-                <b>💡 Dica:</b> Pacotes maiores têm mais bônus de coins.
+                <b>⚠️ Importante:</b> você paga pela DM <i>enviada</i>. Não garantimos que a pessoa vai entrar no seu servidor — apenas que a mensagem é entregue.
               </div>
             </aside>
           </div>
@@ -414,9 +460,9 @@ const Credits = () => {
                     </div>
                     <div className="text-right shrink-0">
                       <div className={`text-sm font-black tabular-nums ${isCredit ? "text-success" : "text-destructive"}`}>
-                        {isCredit ? "+" : ""}{formatCoins(t.amount)}
+                        {isCredit ? "+" : ""}{formatDMs(t.amount)} <span className="text-[10px] font-bold opacity-70">DMs</span>
                       </div>
-                      <div className="text-[10px] text-muted-foreground">saldo: {formatCoins(t.balance_after)}</div>
+                      <div className="text-[10px] text-muted-foreground">saldo: {formatDMs(t.balance_after)}</div>
                     </div>
                   </div>
                 );
@@ -436,7 +482,7 @@ const Credits = () => {
               </div>
               <DialogTitle className="text-xl font-black">Pagamento confirmado! 🎉</DialogTitle>
               <DialogDescription className="mt-2">
-                <span className="text-foreground font-bold">+{formatCoins(deposit?.coins ?? 0)} coins</span> creditados na sua conta.
+                <span className="text-foreground font-bold">+{formatDMs(deposit?.coins ?? 0)} DMs</span> creditadas na sua conta.
               </DialogDescription>
               <Button
                 className="mt-5 w-full font-black"
@@ -464,7 +510,7 @@ const Credits = () => {
                 </div>
                 <div className="rounded-xl bg-primary/10 p-3 text-center">
                   <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Você recebe</div>
-                  <div className="text-lg font-black">{formatCoins(deposit.coins)} <span className="text-xs">coins</span></div>
+                  <div className="text-lg font-black">{formatDMs(deposit.coins)} <span className="text-xs">DMs</span></div>
                 </div>
               </div>
 
@@ -490,7 +536,7 @@ const Credits = () => {
 
               <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/50 rounded-lg p-3">
                 <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
-                <span>Aguardando pagamento... os coins aparecem automaticamente após confirmação.</span>
+                <span>Aguardando pagamento... as DMs aparecem automaticamente após confirmação.</span>
               </div>
 
               {deposit.expires_at && (
