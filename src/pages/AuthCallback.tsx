@@ -17,6 +17,33 @@ const AuthCallback = () => {
       const access_token = params.get("access_token");
       const refresh_token = params.get("refresh_token");
 
+      const urlParams = new URLSearchParams(window.location.search);
+      const token_hash = urlParams.get("token_hash");
+      const type = urlParams.get("type") as "magiclink" | null;
+
+      if (token_hash && type) {
+        const { error } = await supabase.auth.verifyOtp({ token_hash, type });
+        if (error) {
+          toast.error("Erro ao iniciar sessão");
+          navigate("/auth", { replace: true });
+          return;
+        }
+
+        try {
+          const ref = localStorage.getItem("aff_ref");
+          if (ref) {
+            await supabase.functions.invoke("track-referral", {
+              body: { code: ref, action: "signup" },
+            });
+            localStorage.removeItem("aff_ref");
+          }
+        } catch (e) { console.warn("affiliate link error", e); }
+
+        toast.success("Conectado com Discord!");
+        navigate("/app", { replace: true });
+        return;
+      }
+
       if (!access_token || !refresh_token) {
         // Maybe Supabase already auto-handled it via detectSessionInUrl
         const { data } = await supabase.auth.getSession();
