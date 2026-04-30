@@ -164,7 +164,7 @@ export const findGroupOfNiche = (value: string): CategoryGroup | undefined =>
 // SISTEMA DE MOEDA — Coins (estilo Robux/V-Bucks)
 // `profiles.credits` representa COINS. 1 coin = 10 DMs entregues.
 // ============================================================
-export const DMS_PER_COIN = 10;
+export const DMS_PER_COIN = 1;
 
 export const coinsToDms = (coins: number) => coins * DMS_PER_COIN;
 export const dmsToCoins = (dms: number) => Math.ceil(dms / DMS_PER_COIN);

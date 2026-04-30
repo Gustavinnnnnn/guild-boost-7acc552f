@@ -20,8 +20,10 @@ type Tx = {
   description: string | null; balance_after: number; created_at: string;
 };
 
-// 1 coin = R$ 0,10
-const PRICE_PER_COIN = 0.10;
+// 1 coin = 1 DM · 1 coin = R$ 0,05
+const PRICE_PER_COIN = 0.05;
+const MIN_DEPOSIT_BRL = 20;
+const MIN_COINS = Math.round(MIN_DEPOSIT_BRL / PRICE_PER_COIN); // 400
 const coinsToBRL = (coins: number) => coins * PRICE_PER_COIN;
 const brlToCoins = (brl: number) => Math.floor(brl / PRICE_PER_COIN);
 
@@ -30,17 +32,17 @@ const formatBRL = (n: number) =>
 
 const PACKAGES = [
   {
-    coins: 100, bonus: 10, priceBRL: 10, icon: Zap, label: "Starter",
-    desc: "Pra testar a plataforma", popular: false,
+    coins: 400, bonus: 0, priceBRL: 20, icon: Zap, label: "Starter",
+    desc: "Depósito mínimo", popular: false,
     accent: "from-sky-500 to-cyan-400",
   },
   {
-    coins: 500, bonus: 100, priceBRL: 50, icon: Rocket, label: "Pro",
+    coins: 1000, bonus: 100, priceBRL: 50, icon: Rocket, label: "Pro",
     desc: "O mais escolhido", popular: true,
     accent: "from-primary to-primary-glow",
   },
   {
-    coins: 2000, bonus: 600, priceBRL: 200, icon: Crown, label: "Business",
+    coins: 4000, bonus: 600, priceBRL: 200, icon: Crown, label: "Business",
     desc: "Pra campanhas grandes", popular: false,
     accent: "from-amber-400 to-orange-500",
   },
@@ -68,7 +70,7 @@ const Credits = () => {
   const [txs, setTxs] = useState<Tx[]>([]);
   const [buying, setBuying] = useState<string | null>(null);
   const [tab, setTab] = useState<"shop" | "history">("shop");
-  const [customBRL, setCustomBRL] = useState<string>("25");
+  const [customBRL, setCustomBRL] = useState<string>("20");
   const [deposit, setDeposit] = useState<DepositInfo | null>(null);
   const [paid, setPaid] = useState(false);
   const pollRef = useRef<number | null>(null);
@@ -122,7 +124,7 @@ const Credits = () => {
 
   const buyCustom = async () => {
     const brl = parseFloat(customBRL.replace(",", "."));
-    if (!brl || brl < 5) return toast.error("Valor mínimo: R$ 5,00");
+    if (!brl || brl < MIN_DEPOSIT_BRL) return toast.error(`Valor mínimo: ${formatBRL(MIN_DEPOSIT_BRL)}`);
     const coins = brlToCoins(brl);
     await startDeposit(coins, 0, "custom");
   };
@@ -298,11 +300,11 @@ const Credits = () => {
                     <div className="relative mt-1">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">R$</span>
                       <Input
-                        type="number" min="5" step="1"
+                        type="number" min={MIN_DEPOSIT_BRL} step="1"
                         value={customBRL}
                         onChange={(e) => setCustomBRL(e.target.value)}
                         className="pl-10 h-11 text-lg font-black tabular-nums"
-                        placeholder="25"
+                        placeholder="20"
                       />
                     </div>
                   </div>
@@ -326,7 +328,7 @@ const Credits = () => {
                     {buying === "custom" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><QrCode className="h-4 w-4" /> Gerar PIX</>}
                   </Button>
                 </div>
-                <div className="text-[10px] text-muted-foreground mt-2">Mínimo R$ 5,00 (50 coins)</div>
+                <div className="text-[10px] text-muted-foreground mt-2">Mínimo {formatBRL(MIN_DEPOSIT_BRL)} ({formatCoins(MIN_COINS)} coins)</div>
               </div>
             </div>
 
@@ -373,7 +375,7 @@ const Credits = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <MessageCircle className="h-4 w-4 text-primary" />
-                  <span className="text-xs font-bold">1 coin = 10 DMs</span>
+                  <span className="text-xs font-bold">1 coin = 1 DM (R$ 0,05)</span>
                 </div>
               </div>
 
