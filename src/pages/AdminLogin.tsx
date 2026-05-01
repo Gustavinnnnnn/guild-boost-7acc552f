@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, forwardRef, useEffect, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, LockKeyhole, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logo from "@/assets/logo.png";
 
-const AdminLogin = () => {
+const AdminLogin = forwardRef<HTMLDivElement>((_, ref) => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const redirect = params.get("redirect") || "/app/admin";
@@ -55,7 +55,7 @@ const AdminLogin = () => {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground grid place-items-center p-4">
+    <main ref={ref} className="min-h-screen bg-background text-foreground grid place-items-center p-4">
       <section className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-card">
         <div className="mb-6 text-center">
           <img src={logo} alt="ServerBoost" className="mx-auto mb-4 h-16 w-16 rounded-lg object-cover shadow-glow" />
@@ -99,6 +99,8 @@ const AdminLogin = () => {
       </section>
     </main>
   );
-};
+});
+
+AdminLogin.displayName = "AdminLogin";
 
 export default AdminLogin;
