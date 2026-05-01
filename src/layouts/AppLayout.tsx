@@ -17,7 +17,11 @@ const baseNav = [
 
 const AppLayout = () => {
   const navigate = useNavigate();
-  const { profile } = useProfile();
+  const { profile, isAdmin } = useProfile();
+
+  const nav = isAdmin
+    ? [...baseNav, { to: "/app/admin", label: "Admin", icon: Crown, end: false }]
+    : baseNav;
 
   const logout = async () => {
     await supabase.auth.signOut();
