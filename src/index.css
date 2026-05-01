@@ -16,9 +16,9 @@
     --popover: 225 15% 8%;
     --popover-foreground: 220 20% 96%;
 
-    --primary: 235 86% 67%;            /* Discord blurple #5865F2 */
+    --primary: 199 89% 48%;            /* azul limpo, sem roxo */
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 235 90% 75%;
+    --primary-glow: 199 89% 56%;
 
     --secondary: 225 12% 14%;
     --secondary-foreground: 220 20% 92%;
@@ -26,7 +26,7 @@
     --muted: 225 12% 12%;
     --muted-foreground: 220 10% 62%;
 
-    --accent: 235 86% 67%;
+    --accent: 199 89% 48%;
     --accent-foreground: 0 0% 100%;
 
     --success: 142 70% 45%;
@@ -40,25 +40,24 @@
 
     --border: 225 15% 16%;
     --input: 225 15% 14%;
-    --ring: 235 86% 67%;
+    --ring: 199 89% 48%;
 
     --radius: 0.75rem;
 
     /* Sidebar */
     --sidebar-background: 225 18% 5%;
     --sidebar-foreground: 220 14% 78%;
-    --sidebar-primary: 235 86% 67%;
+    --sidebar-primary: 199 89% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 225 15% 11%;
     --sidebar-accent-foreground: 220 18% 92%;
     --sidebar-border: 225 15% 14%;
-    --sidebar-ring: 235 86% 67%;
+    --sidebar-ring: 199 89% 48%;
 
     /* Gradients & shadows */
-    --gradient-primary: linear-gradient(135deg, hsl(235 86% 67%), hsl(230 80% 55%));
-    --gradient-hero: radial-gradient(ellipse at top, hsl(235 86% 67% / 0.15), transparent 60%),
-                     radial-gradient(ellipse at bottom right, hsl(230 80% 55% / 0.10), transparent 60%);
-    --shadow-glow: 0 0 40px hsl(235 86% 67% / 0.25);
+    --gradient-primary: linear-gradient(135deg, hsl(199 89% 48%), hsl(214 82% 56%));
+    --gradient-hero: linear-gradient(180deg, hsl(var(--background)), hsl(var(--card)));
+    --shadow-glow: none;
     --shadow-card: 0 10px 30px -10px hsl(0 0% 0% / 0.7);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
