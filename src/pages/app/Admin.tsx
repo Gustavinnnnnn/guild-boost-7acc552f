@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Users, Server, MessageCircle, DollarSign, Send, Activity, Bot,
-  Loader2, ShieldCheck, TrendingUp, Megaphone, Zap, Crown,
+  Loader2, ShieldCheck, TrendingUp, Megaphone, Zap, Crown, KeyRound,
+  CheckCircle2, XCircle, Save, Eye, EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 
