@@ -16,9 +16,14 @@ Deno.serve(async (req) => {
     const payload = await req.json();
     console.log("Paradise webhook:", JSON.stringify(payload));
 
-    const externalId: string | undefined = payload.external_id;
-    const status: string | undefined = payload.status;
-    const txId = payload.transaction_id ? String(payload.transaction_id) : null;
+    const externalId: string | undefined =
+      payload.external_id || payload.reference || payload.data?.external_id || payload.data?.reference;
+    const rawStatus: string | undefined = payload.status || payload.data?.status;
+    // Normaliza: "paid" === "approved"
+    const status = rawStatus === "paid" ? "approved" : rawStatus;
+    const txId = (payload.transaction_id || payload.id || payload.data?.transaction_id || payload.data?.id)
+      ? String(payload.transaction_id || payload.id || payload.data?.transaction_id || payload.data?.id)
+      : null;
 
     if (!externalId || !status) {
       return new Response(JSON.stringify({ error: "invalid_payload" }), {
@@ -43,7 +48,7 @@ Deno.serve(async (req) => {
     }
 
     // Já processado, ignora
-    if (deposit.status === "approved") {
+    if (deposit.status === "approved" || deposit.status === "paid") {
       return new Response(JSON.stringify({ ok: true, already: "approved" }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
