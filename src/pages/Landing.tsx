@@ -1,528 +1,469 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { DiscordIcon } from "@/components/DiscordIcon";
 import { SupportFab } from "@/components/SupportFab";
-import logo from "@/assets/logo.png";
 import { toast } from "sonner";
 import {
   Loader2,
   ArrowRight,
   Check,
-  Target,
-  ShieldCheck,
-  MessageSquare,
-  Users,
-  Plus,
-  Send,
-  MousePointerClick,
-  WalletCards,
-  Flame,
   Crown,
-  BarChart3,
-  Megaphone,
-  Sparkles,
+  Flame,
+  TrendingUp,
   Zap,
+  Target,
+  DollarSign,
+  Trophy,
+  Rocket,
+  ShieldCheck,
+  MousePointerClick,
+  Send,
+  BarChart3,
+  Sparkles,
 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-const PRICE_PER_DM = 0.20;
-const MIN_DMS = 150;
-
-const quickPicks = [
-  { dms: 150, label: "Testar", hook: "validar a oferta" },
-  { dms: 500, label: "Crescer", hook: "primeiro disparo sério", popular: false },
-  { dms: 1500, label: "Escalar", hook: "campanha forte", popular: true },
-  { dms: 5000, label: "Dominar", hook: "lançamento pesado" },
-];
-
-const proofStats = [
-  { value: "R$30", label: "entrada mínima" },
-  { value: "150", label: "DMs no start" },
-  { value: "PIX", label: "crédito rápido" },
-  { value: "0", label: "mensalidade" },
-];
-
-const objections = [
-  "Post no Instagram passa batido.",
-  "Servidor vazio quebra confiança.",
-  "Tráfego pago fica caro rápido.",
-  "Divulgação genérica atrai curioso, não comprador.",
-];
-
-const outcomes = [
+const plans = [
   {
-    icon: Target,
-    title: "A pessoa certa recebe o convite",
-    text: "Você mira por nicho e interesse para não queimar crédito com público aleatório.",
+    name: "TESTE",
+    dms: 100,
+    price: 49,
+    desc: "Entrada barata pra sentir o sistema",
+    badge: null,
+    cta: "COMEÇAR AGORA",
   },
   {
-    icon: MessageSquare,
-    title: "A oferta chega direto na DM",
-    text: "Nada de esperar algoritmo ajudar. Sua chamada vai para uma conversa privada.",
+    name: "PRO",
+    dms: 300,
+    price: 129,
+    desc: "Para quem já quer ver o servidor enchendo",
+    badge: "MAIS ESCOLHIDO",
+    cta: "COMEÇAR AGORA",
   },
   {
-    icon: BarChart3,
-    title: "Você acompanha o que importa",
-    text: "Créditos, campanhas e entrega ficam visíveis no painel depois do login.",
-  },
-];
-
-const faqs = [
-  {
-    q: "Existe mensalidade?",
-    a: "Não. Você compra a quantidade de DMs que quiser (mínimo 150 = R$30) e usa quando quiser. Suas DMs nunca expiram.",
-  },
-  {
-    q: "Quanto custa cada DM?",
-    a: "R$ 0,20 por DM enviada. Você define o volume — pode comprar 150, 287, 1.000, 5.000... o que precisar.",
-  },
-  {
-    q: "Quando os créditos caem?",
-    a: "Depois da confirmação do PIX, os créditos entram automaticamente para você criar a campanha.",
-  },
-  {
-    q: "Serve só para servidor Discord?",
-    a: "Funciona muito bem para servidor, comunidade, grupo VIP, loja, lançamento e link de oferta.",
+    name: "ELITE",
+    dms: 1000,
+    price: 379,
+    desc: "Melhor custo por DM. Para dominar.",
+    badge: "MELHOR CUSTO",
+    cta: "COMEÇAR AGORA",
   },
 ];
 
 const Landing = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const [params] = useSearchParams();
   const [clientId, setClientId] = useState<string>("");
   const [busy, setBusy] = useState(false);
-  const [liveCount, setLiveCount] = useState(2_184_337);
-  const [dmCalc, setDmCalc] = useState<number>(1500);
 
   useEffect(() => {
-    const ref = params.get("ref");
-    if (ref) {
-      try {
-        localStorage.setItem("aff_ref", ref);
-        fetch(`${SUPABASE_URL}/functions/v1/track-referral`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code: ref, action: "click" }),
-        }).catch(() => {});
-      } catch {
-        /* ignore */
-      }
+    supabase.functions.invoke("discord-config").then(({ data }) => {
+      if (data?.client_id) setClientId(data.client_id);
+    }).catch(() => {});
+  }, []);
+
+  const connectDiscord = () => {
+    if (!clientId) {
+      toast.error("Carregando configuração... tenta de novo em 2s");
+      return;
     }
-  }, [params]);
-
-  useEffect(() => {
-    supabase.functions
-      .invoke("discord-config")
-      .then(({ data }) => {
-        if (data?.client_id) setClientId(data.client_id);
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setLiveCount((count) => count + Math.floor(Math.random() * 4) + 1);
-    }, 1600);
-    return () => clearInterval(id);
-  }, []);
-
-  const loginWithDiscord = () => {
-    if (user) return navigate("/app");
-    if (!clientId) return toast.error("Configuração do Discord não carregada");
     setBusy(true);
-    const state = btoa(JSON.stringify({ origin: window.location.origin, nonce: crypto.randomUUID() }));
+    const state = btoa(JSON.stringify({ origin: window.location.origin, redirect: "/app", nonce: crypto.randomUUID() }));
     const redirectUri = encodeURIComponent(`${SUPABASE_URL}/functions/v1/discord-oauth-callback`);
     const scope = encodeURIComponent("identify email guilds");
     window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=${state}&prompt=consent`;
   };
 
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans antialiased overflow-x-hidden">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/92 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
-          <a href="#" className="flex min-w-0 items-center gap-3" aria-label="ServerBoost">
-            <img src={logo} alt="ServerBoost" className="h-10 w-10 rounded-md object-cover ring-1 ring-border" width={40} height={40} />
-            <div className="leading-none">
-              <span className="block text-base font-black">ServerBoost</span>
-              <span className="mt-1 hidden text-[10px] font-black uppercase text-muted-foreground sm:block">DM segmentada para Discord</span>
+    <div className="min-h-screen bg-black text-white overflow-x-hidden">
+      {/* HEADER */}
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-black/80 border-b border-gold/20">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-gold to-gold-dark grid place-items-center shadow-[0_0_20px_rgba(255,215,0,0.5)]">
+              <Crown className="h-5 w-5 text-black" />
             </div>
-          </a>
-
-          <nav className="hidden items-center gap-1 text-sm lg:flex">
-            {[
-              { id: "planos", label: "Calcular preço" },
-              { id: "prova", label: "Prova" },
-              { id: "faq", label: "Dúvidas" },
-            ].map((item) => (
-              <button
-                key={item.id}
-                onClick={() => scrollTo(item.id)}
-                className="rounded-md px-4 py-2 font-bold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
-
+            <span className="font-display font-black text-lg tracking-tight">
+              ORG<span className="text-gold">BOOST</span>
+            </span>
+          </div>
           <button
-            onClick={loginWithDiscord}
+            onClick={connectDiscord}
             disabled={busy}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-black text-primary-foreground shadow-glow transition-all hover:bg-primary-glow disabled:opacity-60"
+            className="group relative inline-flex items-center gap-2 px-4 md:px-6 h-10 md:h-11 rounded-lg bg-gradient-to-r from-gold to-gold-dark text-black font-black text-xs md:text-sm uppercase tracking-wider shadow-[0_0_25px_rgba(255,215,0,0.4)] hover:shadow-[0_0_40px_rgba(255,215,0,0.7)] transition-all hover:scale-[1.03] disabled:opacity-50"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <DiscordIcon className="h-4 w-4" />}
-            <span>{user ? "Painel" : "Entrar"}</span>
+            <span className="hidden sm:inline">Conectar Discord</span>
+            <span className="sm:hidden">Conectar</span>
           </button>
         </div>
       </header>
 
-      <main className="pt-16">
-        <section className="relative overflow-hidden border-b border-border bg-landing-stage">
-          <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl gap-8 px-4 py-8 md:px-8 lg:grid-cols-[1.03fr_0.97fr] lg:items-center lg:py-12">
-            <div className="relative z-10 max-w-3xl">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs font-black uppercase text-muted-foreground shadow-card">
-                <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
-                {liveCount.toLocaleString("pt-BR")} DMs entregues
-              </div>
+      {/* HERO */}
+      <section className="relative pt-12 md:pt-20 pb-16 md:pb-28">
+        {/* Background effects */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full bg-gold/10 blur-[120px]" />
+          <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-red-glow/15 blur-[100px]" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,215,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,215,0,0.04)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_70%)]" />
+        </div>
 
-              <h1 className="font-display text-[clamp(3rem,9vw,7.4rem)] font-black leading-[0.84]">
-                Seu Discord não pode parecer vazio.
-              </h1>
-
-              <p className="mt-6 max-w-2xl text-lg font-semibold leading-relaxed text-muted-foreground md:text-xl">
-                Compre créditos, crie uma campanha e coloque seu convite na DM de gente com interesse real no seu nicho.
-              </p>
-
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <button
-                  onClick={loginWithDiscord}
-                  disabled={busy}
-                  className="group inline-flex h-14 items-center justify-center gap-3 rounded-md bg-primary px-7 text-base font-black text-primary-foreground shadow-glow transition-all hover:bg-primary-glow disabled:opacity-60"
-                >
-                  {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <DiscordIcon className="h-5 w-5" />}
-                  Comprar créditos
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </button>
-                <button
-                  onClick={() => scrollTo("planos")}
-                  className="inline-flex h-14 items-center justify-center gap-2 rounded-md border border-border bg-card px-7 text-base font-black text-foreground transition-colors hover:border-primary hover:bg-secondary"
-                >
-                  Ver planos
-                </button>
-              </div>
-
-              <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {proofStats.map((item) => (
-                  <div key={item.label} className="border-l border-border pl-3">
-                    <div className="font-display text-3xl font-black leading-none">{item.value}</div>
-                    <div className="mt-2 text-[10px] font-black uppercase text-muted-foreground">{item.label}</div>
-                  </div>
-                ))}
-              </div>
+        <div className="container mx-auto px-4 relative">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-gold/40 bg-gold/5 text-gold text-[11px] md:text-xs font-bold uppercase tracking-[0.2em] mb-6 md:mb-8 animate-fade-in">
+              <Flame className="h-3.5 w-3.5" />
+              Exclusivo para orgs de apostas Free Fire
             </div>
 
-            <div className="relative z-10 mx-auto w-full max-w-[560px] lg:mr-0">
-              <div className="mb-3 grid grid-cols-3 gap-2 text-center text-xs font-black uppercase">
-                <div className="rounded-md border border-border bg-card p-3 text-muted-foreground">campanha</div>
-                <div className="rounded-md border border-primary bg-primary p-3 text-primary-foreground">entrega</div>
-                <div className="rounded-md border border-border bg-card p-3 text-muted-foreground">resultado</div>
-              </div>
+            <h1 className="font-display text-4xl sm:text-5xl md:text-7xl font-black leading-[0.95] tracking-tight mb-6 md:mb-8">
+              TRANSFORME SUA ORG DE{" "}
+              <span className="relative inline-block">
+                <span className="bg-gradient-to-r from-gold via-yellow-300 to-gold-dark bg-clip-text text-transparent">
+                  APOSTAS
+                </span>
+              </span>{" "}
+              EM UMA{" "}
+              <span className="text-red-glow">MÁQUINA</span> DE ENTRADA DE JOGADORES
+            </h1>
 
-              <div className="overflow-hidden rounded-md border border-border bg-card shadow-card">
-                <div className="flex items-center justify-between border-b border-border bg-secondary px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-md bg-primary text-primary-foreground">
-                      <Megaphone className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-black">Campanha rodando</div>
-                      <div className="text-xs text-muted-foreground">Games • Brasil • convite direto</div>
-                    </div>
-                  </div>
-                  <span className="rounded-md bg-success px-2 py-1 text-[10px] font-black uppercase text-success-foreground">ativa</span>
+            <p className="text-base md:text-xl text-white/70 max-w-2xl mx-auto mb-8 md:mb-10 leading-relaxed">
+              Sistema automático que coloca seu Discord{" "}
+              <span className="text-gold font-bold">na frente de quem já aposta em Free Fire</span> — todos os dias.
+            </p>
+
+            <div className="flex flex-col items-center gap-3">
+              <button
+                onClick={connectDiscord}
+                disabled={busy}
+                className="group relative inline-flex items-center gap-3 px-8 md:px-10 h-14 md:h-16 rounded-xl bg-gradient-to-r from-gold via-yellow-300 to-gold-dark text-black font-black text-base md:text-lg uppercase tracking-wider shadow-[0_0_50px_rgba(255,215,0,0.5)] hover:shadow-[0_0_80px_rgba(255,215,0,0.8)] transition-all hover:scale-[1.04] disabled:opacity-50"
+              >
+                {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <DiscordIcon className="h-5 w-5 md:h-6 md:w-6" />}
+                Conectar com Discord
+                <ArrowRight className="h-5 w-5 md:h-6 md:w-6 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <p className="text-xs text-white/50 mt-1">Sem cadastro • Sem cartão • 1 clique</p>
+            </div>
+
+            {/* DASHBOARD MOCK */}
+            <div className="mt-12 md:mt-20 relative max-w-3xl mx-auto">
+              <div className="absolute -inset-1 bg-gradient-to-r from-gold via-red-glow to-gold rounded-2xl blur-xl opacity-40" />
+              <div className="relative rounded-2xl border border-gold/30 bg-gradient-to-br from-zinc-950 to-black p-4 md:p-6 shadow-2xl">
+                {/* Window bar */}
+                <div className="flex items-center gap-1.5 mb-4">
+                  <div className="h-2.5 w-2.5 rounded-full bg-red-500/60" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/60" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-green-500/60" />
+                  <div className="ml-3 text-[10px] text-white/40 font-mono">orgboost.app/painel</div>
                 </div>
 
-                <div className="grid gap-0 md:grid-cols-[1fr_0.82fr]">
-                  <div className="border-b border-border p-4 md:border-b-0 md:border-r">
-                    <div className="mb-3 flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">
-                      <Send className="h-4 w-4 text-primary" /> prévia da DM
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4">
+                  {[
+                    { icon: Send, label: "DMs Enviadas", value: "12.847", color: "text-gold" },
+                    { icon: MousePointerClick, label: "Cliques", value: "3.421", color: "text-red-glow" },
+                    { icon: TrendingUp, label: "Novos Membros", value: "+1.892", color: "text-emerald-400" },
+                  ].map((s, i) => (
+                    <div key={i} className="rounded-xl bg-black/60 border border-white/5 p-3 md:p-4 text-left">
+                      <s.icon className={`h-4 w-4 md:h-5 md:w-5 ${s.color} mb-2`} />
+                      <div className={`text-lg md:text-2xl font-black ${s.color}`}>{s.value}</div>
+                      <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-white/40 font-bold">{s.label}</div>
                     </div>
-                    <div className="rounded-md bg-background p-4 text-sm font-semibold leading-relaxed text-foreground">
-                      Vi que você curte comunidade de games. Abrimos um Discord BR com eventos, call ativa e sorteios semanais.
-                      <div className="mt-4 rounded-md border border-primary bg-primary/10 px-3 py-2 font-black text-primary">discord.gg/seulink</div>
+                  ))}
+                </div>
+
+                {/* Fake notifications */}
+                <div className="space-y-1.5 text-left">
+                  {[
+                    { user: "carlos_aposta", action: "entrou no servidor", time: "agora" },
+                    { user: "ff_bet_king", action: "clicou no link", time: "1s" },
+                    { user: "rumble_master", action: "entrou no servidor", time: "3s" },
+                  ].map((n, i) => (
+                    <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/40 border border-gold/10 text-xs animate-fade-in" style={{ animationDelay: `${i * 100}ms` }}>
+                      <div className="h-6 w-6 rounded-full bg-gradient-to-br from-gold to-gold-dark grid place-items-center text-black font-black text-[10px]">
+                        {n.user[0].toUpperCase()}
+                      </div>
+                      <span className="text-white/80"><b className="text-gold">@{n.user}</b> {n.action}</span>
+                      <span className="ml-auto text-white/30 text-[10px]">{n.time}</span>
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-px bg-border md:grid-cols-1">
-                    {[
-                      { icon: Send, value: "900", label: "DMs" },
-                      { icon: MousePointerClick, value: "137", label: "cliques" },
-                      { icon: Users, value: "62", label: "entradas" },
-                    ].map((metric) => {
-                      const Icon = metric.icon;
-                      return (
-                        <div key={metric.label} className="bg-card p-4">
-                          <Icon className="mb-3 h-4 w-4 text-primary" />
-                          <div className="font-display text-3xl font-black leading-none">{metric.value}</div>
-                          <div className="mt-2 text-[10px] font-black uppercase text-muted-foreground">{metric.label}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                <div className="rounded-md border border-border bg-card p-4">
-                  <Sparkles className="mb-3 h-5 w-5 text-warning" />
-                  <div className="font-black">Sem mensalidade</div>
-                  <div className="mt-1 text-xs text-muted-foreground">comprou, usou</div>
-                </div>
-                <div className="rounded-md border border-border bg-card p-4">
-                  <ShieldCheck className="mb-3 h-5 w-5 text-success" />
-                  <div className="font-black">Painel próprio</div>
-                  <div className="mt-1 text-xs text-muted-foreground">tudo no login</div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="border-b border-border bg-card/35">
-          <div className="mx-auto grid max-w-7xl gap-px bg-border px-0 md:grid-cols-4">
-            {objections.map((point) => (
-              <div key={point} className="flex items-start gap-3 bg-background p-5 md:p-6">
-                <Flame className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
-                <p className="text-sm font-black leading-relaxed text-foreground">{point}</p>
+      {/* IMPACT BLOCK */}
+      <section className="py-16 md:py-24 border-y border-gold/20 bg-gradient-to-b from-black via-zinc-950 to-black relative">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,215,0,0.06),transparent_70%)]" />
+        <div className="container mx-auto px-4 relative text-center">
+          <p className="text-base md:text-lg text-white/50 uppercase tracking-[0.3em] mb-4 font-bold">A real é essa</p>
+          <h2 className="font-display text-3xl md:text-6xl font-black leading-tight mb-6 max-w-4xl mx-auto">
+            Enquanto algumas orgs ficam <span className="text-red-glow line-through opacity-70">paradas</span>…
+            <br />
+            outras estão crescendo <span className="text-gold">TODOS OS DIAS</span>
+          </h2>
+          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full border-2 border-gold/40 bg-gold/5 mt-4">
+            <Trophy className="h-5 w-5 text-gold" />
+            <p className="text-base md:text-xl font-black tracking-wide">
+              Diferença? <span className="text-gold">Elas usam sistema.</span>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="py-16 md:py-28">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
+            <p className="text-gold uppercase tracking-[0.3em] text-xs font-bold mb-3">Como funciona</p>
+            <h2 className="font-display text-3xl md:text-5xl font-black leading-tight">
+              Você não precisa divulgar manualmente <span className="text-gold">nunca mais.</span>
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto">
+            {[
+              {
+                n: "01",
+                icon: Target,
+                title: "Escolhe quantas DMs quer",
+                desc: "100, 300, 1000... você decide o tamanho do disparo.",
+              },
+              {
+                n: "02",
+                icon: Flame,
+                title: "Define o público",
+                desc: "Apostas, Free Fire, e-sports. A IA encontra os jogadores certos.",
+              },
+              {
+                n: "03",
+                icon: Rocket,
+                title: "Sistema entrega no privado",
+                desc: "Sua oferta cai direto no DM. Sem você mexer um dedo.",
+              },
+            ].map((step, i) => (
+              <div key={i} className="group relative rounded-2xl border border-gold/20 bg-gradient-to-br from-zinc-950 to-black p-6 md:p-8 hover:border-gold/60 transition-all hover:-translate-y-1">
+                <div className="absolute top-4 right-4 font-display text-5xl md:text-6xl font-black text-gold/10 group-hover:text-gold/20 transition-colors">{step.n}</div>
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-gold to-gold-dark grid place-items-center mb-4 shadow-[0_0_20px_rgba(255,215,0,0.3)]">
+                  <step.icon className="h-6 w-6 text-black" />
+                </div>
+                <h3 className="font-display font-black text-xl md:text-2xl mb-2">{step.title}</h3>
+                <p className="text-white/60 text-sm leading-relaxed">{step.desc}</p>
               </div>
             ))}
           </div>
-        </section>
 
-        <section id="planos" className="border-b border-border bg-gradient-to-b from-background via-card/40 to-background">
-          <div className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
-            <div className="mb-10 text-center">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-primary">
-                <Sparkles className="h-3 w-3" /> Você escolhe a quantidade
-              </div>
-              <h2 className="font-display text-4xl font-black leading-tight md:text-6xl">
-                Sem plano. Sem mensalidade.
-              </h2>
-              <p className="mx-auto mt-4 max-w-2xl text-lg font-semibold text-muted-foreground">
-                Cada DM custa <b className="text-foreground">R$ 0,20</b>. Compra a quantia que precisar — mínimo 150 DMs.
-              </p>
+          <div className="mt-10 text-center">
+            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-gold/10 border border-gold/30">
+              <Sparkles className="h-4 w-4 text-gold" />
+              <span className="font-bold text-gold text-sm md:text-base">Tudo automático.</span>
             </div>
-
-            <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-              {/* Calculadora */}
-              <div className="relative overflow-hidden rounded-2xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 via-card to-card p-6 md:p-8 shadow-[0_0_60px_-20px_hsl(var(--primary)/0.5)]">
-                <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/15 blur-3xl" />
-                <div className="relative">
-                  <div className="text-[10px] uppercase tracking-widest font-black text-primary mb-2">Calculadora ao vivo</div>
-                  <h3 className="text-2xl md:text-3xl font-black mb-1">Quantas DMs você quer?</h3>
-                  <p className="text-xs text-muted-foreground mb-6">Arraste, digite ou escolha um atalho</p>
-
-                  <div className="rounded-xl bg-background/60 border border-border p-4 mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">DMs</span>
-                      <span className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Total PIX</span>
-                    </div>
-                    <div className="flex items-baseline justify-between">
-                      <span className="font-display text-5xl md:text-6xl font-black text-primary tabular-nums">{dmCalc.toLocaleString("pt-BR")}</span>
-                      <span className="font-display text-3xl md:text-4xl font-black tabular-nums">R$ {(dmCalc * PRICE_PER_DM).toFixed(2).replace(".", ",")}</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={MIN_DMS}
-                      max={5000}
-                      step={10}
-                      value={Math.min(5000, dmCalc)}
-                      onChange={(e) => setDmCalc(parseInt(e.target.value))}
-                      className="w-full mt-4 accent-primary cursor-pointer"
-                    />
-                    <div className="flex justify-between text-[10px] text-muted-foreground font-bold mt-1">
-                      <span>150</span><span>1k</span><span>2.5k</span><span>5k+</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
-                    {quickPicks.map((p) => (
-                      <button
-                        key={p.dms}
-                        onClick={() => setDmCalc(p.dms)}
-                        className={`relative rounded-xl border-2 p-3 text-left transition ${
-                          dmCalc === p.dms ? "border-primary bg-primary/15 shadow-glow" : "border-border bg-background/40 hover:border-primary/40"
-                        }`}
-                      >
-                        {p.popular && <span className="absolute -top-2 left-2 rounded bg-primary text-primary-foreground text-[8px] font-black px-1.5 py-0.5 uppercase">Popular</span>}
-                        <div className="text-[9px] uppercase tracking-widest font-black text-muted-foreground">{p.label}</div>
-                        <div className="text-base font-black tabular-nums mt-0.5">{p.dms.toLocaleString("pt-BR")}</div>
-                        <div className="text-[10px] text-muted-foreground font-bold">R$ {(p.dms * PRICE_PER_DM).toFixed(2).replace(".", ",")}</div>
-                      </button>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={loginWithDiscord}
-                    disabled={busy}
-                    className="group inline-flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-primary text-primary-foreground text-base font-black shadow-glow transition-all hover:bg-primary-glow disabled:opacity-60"
-                  >
-                    {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <WalletCards className="h-5 w-5" />}
-                    Comprar {dmCalc.toLocaleString("pt-BR")} DMs por R$ {(dmCalc * PRICE_PER_DM).toFixed(2).replace(".", ",")}
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Benefícios */}
-              <div className="space-y-3">
-                {[
-                  { icon: Zap, title: "PIX libera na hora", text: "Confirmou pagamento, DMs caem na conta automaticamente." },
-                  { icon: Target, title: "Segmentação por nicho", text: "Escolhe Games, Cripto, Trading, Adulto, etc — só fala com público real." },
-                  { icon: ShieldCheck, title: "DMs nunca expiram", text: "Comprou e não usou? Fica no saldo até você decidir disparar." },
-                  { icon: BarChart3, title: "Painel com tudo", text: "Acompanha entrega, cliques e falhas em tempo real." },
-                ].map((b) => {
-                  const I = b.icon;
-                  return (
-                    <div key={b.title} className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 hover:border-primary transition">
-                      <div className="h-10 w-10 rounded-lg bg-primary/15 grid place-items-center shrink-0">
-                        <I className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <div className="font-black text-sm">{b.title}</div>
-                        <div className="text-xs text-muted-foreground mt-0.5">{b.text}</div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="prova" className="border-b border-border bg-secondary/30">
-          <div className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
-            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-              <div>
-                <div className="mb-3 text-xs font-black uppercase text-primary">Por que isso vende melhor</div>
-                <h2 className="font-display text-4xl font-black leading-tight md:text-6xl">A oferta não fica esperando o algoritmo.</h2>
-                <button
-                  onClick={loginWithDiscord}
-                  disabled={busy}
-                  className="mt-7 inline-flex h-12 items-center justify-center gap-2 rounded-md bg-primary px-6 text-sm font-black text-primary-foreground transition-colors hover:bg-primary-glow disabled:opacity-60"
-                >
-                  Entrar e criar campanha <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-3">
-                {outcomes.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <article key={item.title} className="rounded-md border border-border bg-card p-5">
-                      <div className="mb-5 grid h-11 w-11 place-items-center rounded-md bg-primary text-primary-foreground">
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <h3 className="text-lg font-black leading-tight">{item.title}</h3>
-                      <p className="mt-3 text-sm font-semibold leading-relaxed text-muted-foreground">{item.text}</p>
-                    </article>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="afiliado" className="border-b border-border bg-gradient-primary text-primary-foreground">
-          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-14 md:px-8 md:py-20 lg:grid-cols-[1fr_0.9fr] lg:items-center">
-            <div>
-              <div className="mb-3 text-xs font-black uppercase text-primary-foreground/75">Afiliados</div>
-              <h2 className="font-display text-4xl font-black leading-tight md:text-6xl">Indique e ganhe 20% por compra.</h2>
-              <p className="mt-5 max-w-2xl text-lg font-semibold leading-relaxed text-primary-foreground/85">
-                Seu link vira comissão recorrente. Saque via PIX a partir de R$50.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { value: "20%", label: "comissão" },
-                { value: "R$50", label: "saque" },
-                { value: "PIX", label: "pagamento" },
-                { value: "link", label: "próprio" },
-              ].map((item) => (
-                <div key={item.label} className="rounded-md border border-primary-foreground/20 bg-primary-foreground/10 p-5 backdrop-blur">
-                  <div className="font-display text-3xl font-black">{item.value}</div>
-                  <div className="mt-2 text-xs font-black uppercase text-primary-foreground/70">{item.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="faq" className="border-b border-border">
-          <div className="mx-auto max-w-3xl px-4 py-14 md:px-8 md:py-20">
-            <div className="mb-8 text-center">
-              <div className="mb-3 text-xs font-black uppercase text-primary">Dúvidas rápidas</div>
-              <h2 className="font-display text-4xl font-black md:text-5xl">Antes de comprar</h2>
-            </div>
-
-            <div className="space-y-3">
-              {faqs.map((item) => (
-                <details key={item.q} className="group rounded-md border border-border bg-card transition-colors hover:border-primary [&_summary::-webkit-details-marker]:hidden">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
-                    <span className="text-base font-black md:text-lg">{item.q}</span>
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-secondary transition-transform group-open:rotate-45">
-                      <Plus className="h-4 w-4" />
-                    </span>
-                  </summary>
-                  <p className="px-5 pb-5 font-semibold leading-relaxed text-muted-foreground">{item.a}</p>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-card">
-          <div className="mx-auto max-w-7xl px-4 py-14 text-center md:px-8 md:py-20">
-            <h2 className="mx-auto max-w-4xl font-display text-4xl font-black leading-tight md:text-6xl">
-              Coloca seu link na rua hoje.
-            </h2>
-            <p className="mx-auto mt-5 max-w-2xl text-lg font-semibold leading-relaxed text-muted-foreground">
-              Entra com Discord, escolhe o plano e transforma crédito em campanha.
-            </p>
-            <button
-              onClick={loginWithDiscord}
-              disabled={busy}
-              className="mt-8 inline-flex h-14 items-center justify-center gap-3 rounded-md bg-primary px-8 text-base font-black text-primary-foreground shadow-glow transition-colors hover:bg-primary-glow disabled:opacity-60"
-            >
-              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <DiscordIcon className="h-5 w-5" />}
-              Comprar créditos agora
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        </section>
-      </main>
-
-      <footer className="border-t border-border bg-background">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 text-sm md:flex-row md:px-8">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="ServerBoost" className="h-8 w-8 rounded-md object-cover" width={32} height={32} />
-            <span className="font-black">ServerBoost</span>
-            <span className="text-xs text-muted-foreground">© {new Date().getFullYear()}</span>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-5 text-xs font-black uppercase text-muted-foreground">
-            <button onClick={() => scrollTo("planos")} className="hover:text-foreground">Preço</button>
-            <button onClick={() => scrollTo("prova")} className="hover:text-foreground">Prova</button>
-            <button onClick={() => scrollTo("faq")} className="hover:text-foreground">Dúvidas</button>
           </div>
         </div>
+      </section>
+
+      {/* PANEL PREVIEW */}
+      <section className="py-16 md:py-28 border-y border-gold/20 bg-gradient-to-b from-black to-zinc-950">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <p className="text-gold uppercase tracking-[0.3em] text-xs font-bold mb-3">Painel exclusivo</p>
+            <h2 className="font-display text-3xl md:text-5xl font-black leading-tight">
+              Conectou o Discord. <span className="text-gold">Acesso liberado.</span>
+            </h2>
+            <p className="text-white/60 mt-4 text-base md:text-lg">Tudo que você precisa pra dominar o jogo, num só lugar.</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4 md:gap-5 max-w-6xl mx-auto">
+            {[
+              {
+                icon: BarChart3,
+                title: "DASHBOARD",
+                items: ["DMs enviadas em tempo real", "Cliques recebidos", "Crescimento do servidor"],
+              },
+              {
+                icon: Send,
+                title: "CRIAR CAMPANHA",
+                items: ["Escolher quantidade de DMs", "Definir público (apostas / FF)", "Ativar com 1 clique"],
+              },
+              {
+                icon: DollarSign,
+                title: "COMPRAR DMs",
+                items: ["Planos rápidos", "Checkout PIX", "Crédito instantâneo"],
+              },
+            ].map((card, i) => (
+              <div key={i} className="rounded-2xl border-2 border-gold/20 bg-black p-6 md:p-7 hover:border-gold/50 transition-all">
+                <div className="flex items-center gap-3 mb-5 pb-4 border-b border-white/5">
+                  <div className="h-10 w-10 rounded-lg bg-gold/10 border border-gold/30 grid place-items-center">
+                    <card.icon className="h-5 w-5 text-gold" />
+                  </div>
+                  <h3 className="font-display font-black text-base md:text-lg tracking-wide">{card.title}</h3>
+                </div>
+                <ul className="space-y-3">
+                  {card.items.map((it, j) => (
+                    <li key={j} className="flex items-start gap-2.5 text-sm text-white/80">
+                      <Check className="h-4 w-4 text-gold mt-0.5 shrink-0" />
+                      <span>{it}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PROOF / GROWTH */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto rounded-3xl border border-gold/30 bg-gradient-to-br from-zinc-950 via-black to-zinc-950 p-6 md:p-12 relative overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,215,0,0.1),transparent_60%)]" />
+            <div className="relative grid md:grid-cols-2 gap-8 items-center">
+              <div>
+                <p className="text-gold uppercase tracking-[0.3em] text-xs font-bold mb-3">Resultado real</p>
+                <h2 className="font-display text-3xl md:text-5xl font-black leading-tight mb-4">
+                  Movimento <span className="text-gold">constante.</span><br />
+                  Servidor <span className="text-red-glow">cheio.</span>
+                </h2>
+                <p className="text-white/60 text-base md:text-lg leading-relaxed">
+                  Enquanto o concorrente posta no story esperando "viralizar", o seu Discord tá recebendo apostadores reais — minuto após minuto.
+                </p>
+              </div>
+
+              {/* Fake chart */}
+              <div className="rounded-2xl bg-black/60 border border-gold/20 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Membros / dia</div>
+                    <div className="text-3xl font-black text-gold">+247%</div>
+                  </div>
+                  <div className="px-2 py-1 rounded bg-emerald-500/15 text-emerald-400 text-[10px] font-bold">▲ ATIVO</div>
+                </div>
+                <div className="flex items-end gap-1.5 h-32">
+                  {[15, 22, 18, 35, 28, 48, 42, 65, 58, 78, 72, 95].map((h, i) => (
+                    <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-gold/40 to-gold relative overflow-hidden" style={{ height: `${h}%` }}>
+                      <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/30" />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-between mt-2 text-[9px] text-white/30 font-mono">
+                  <span>SEG</span><span>TER</span><span>QUA</span><span>QUI</span><span>SEX</span><span>SAB</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PRICING */}
+      <section className="py-16 md:py-28 border-y border-gold/20 bg-gradient-to-b from-zinc-950 to-black">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
+            <p className="text-gold uppercase tracking-[0.3em] text-xs font-bold mb-3">Planos</p>
+            <h2 className="font-display text-3xl md:text-5xl font-black leading-tight">
+              Escolhe o tamanho do <span className="text-gold">disparo.</span>
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto">
+            {plans.map((p, i) => {
+              const featured = p.name === "PRO";
+              return (
+                <div
+                  key={i}
+                  className={`relative rounded-2xl p-6 md:p-8 transition-all hover:-translate-y-1 ${
+                    featured
+                      ? "border-2 border-gold bg-gradient-to-br from-gold/10 via-zinc-950 to-black shadow-[0_0_40px_rgba(255,215,0,0.3)] md:scale-105"
+                      : "border border-gold/20 bg-black hover:border-gold/50"
+                  }`}
+                >
+                  {p.badge && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-gold to-gold-dark text-black text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                      {p.badge}
+                    </div>
+                  )}
+                  <div className="text-center">
+                    <h3 className="font-display font-black text-2xl md:text-3xl tracking-tight mb-1">{p.name}</h3>
+                    <p className="text-xs text-white/50 mb-6">{p.desc}</p>
+                    <div className="mb-6">
+                      <div className="text-5xl md:text-6xl font-display font-black text-gold leading-none">
+                        {p.dms.toLocaleString("pt-BR")}
+                      </div>
+                      <div className="text-xs uppercase tracking-widest text-white/40 font-bold mt-1">DMs</div>
+                    </div>
+                    <div className="mb-6">
+                      <div className="text-3xl font-black">
+                        R$ {p.price}
+                      </div>
+                      <div className="text-[11px] text-white/40">pagamento único · PIX</div>
+                    </div>
+                    <button
+                      onClick={connectDiscord}
+                      disabled={busy}
+                      className={`w-full h-12 rounded-xl font-black uppercase tracking-wider text-sm transition-all ${
+                        featured
+                          ? "bg-gradient-to-r from-gold to-gold-dark text-black shadow-[0_0_30px_rgba(255,215,0,0.5)] hover:shadow-[0_0_50px_rgba(255,215,0,0.8)] hover:scale-[1.03]"
+                          : "bg-white/5 border border-gold/30 text-gold hover:bg-gold hover:text-black"
+                      }`}
+                    >
+                      {p.cta}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* OBJECTIONS */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-4 gap-3 md:gap-4 max-w-5xl mx-auto">
+            {[
+              { icon: Zap, t: "100% automático", d: "Você não mexe em nada" },
+              { icon: Target, t: "Foco em apostas FF", d: "Público filtrado" },
+              { icon: ShieldCheck, t: "Sem esforço manual", d: "Configura e esquece" },
+              { icon: Rocket, t: "Resultados rápidos", d: "Sente em horas" },
+            ].map((o, i) => (
+              <div key={i} className="rounded-xl border border-gold/20 bg-zinc-950 p-5 text-center hover:border-gold/50 transition-colors">
+                <o.icon className="h-7 w-7 text-gold mx-auto mb-3" />
+                <div className="font-black text-sm md:text-base mb-1">{o.t}</div>
+                <div className="text-xs text-white/50">{o.d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FINAL CTA */}
+      <section className="py-20 md:py-32 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,215,0,0.15),transparent_60%)]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-red-glow/10 blur-[100px]" />
+        </div>
+        <div className="container mx-auto px-4 relative text-center">
+          <Crown className="h-12 w-12 md:h-16 md:w-16 text-gold mx-auto mb-6 drop-shadow-[0_0_20px_rgba(255,215,0,0.6)]" />
+          <h2 className="font-display text-4xl md:text-7xl font-black leading-[0.95] tracking-tight mb-8 max-w-4xl mx-auto">
+            Quem cresce primeiro,<br />
+            <span className="bg-gradient-to-r from-gold via-yellow-300 to-gold-dark bg-clip-text text-transparent">domina o jogo.</span>
+          </h2>
+          <button
+            onClick={connectDiscord}
+            disabled={busy}
+            className="group inline-flex items-center gap-3 px-10 md:px-14 h-16 md:h-20 rounded-2xl bg-gradient-to-r from-gold via-yellow-300 to-gold-dark text-black font-black text-base md:text-xl uppercase tracking-wider shadow-[0_0_60px_rgba(255,215,0,0.6)] hover:shadow-[0_0_100px_rgba(255,215,0,0.9)] transition-all hover:scale-[1.04] disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <DiscordIcon className="h-6 w-6 md:h-7 md:w-7" />}
+            Conectar com Discord
+            <ArrowRight className="h-6 w-6 md:h-7 md:w-7 group-hover:translate-x-1 transition-transform" />
+          </button>
+          <p className="text-xs text-white/40 mt-5">Sem cadastro chato. 1 clique. Painel liberado na hora.</p>
+        </div>
+      </section>
+
+      <footer className="border-t border-gold/10 py-8 text-center text-xs text-white/30">
+        © {new Date().getFullYear()} OrgBoost — Sistema exclusivo para orgs de apostas Free Fire
       </footer>
 
       <SupportFab />
