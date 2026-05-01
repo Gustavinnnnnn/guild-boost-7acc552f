@@ -65,19 +65,20 @@ const Landing = () => {
           <button
             onClick={connectDiscord}
             disabled={busy}
-            className="group inline-flex items-center gap-2 px-4 md:px-5 h-10 rounded-lg bg-primary text-primary-foreground font-bold text-xs md:text-sm uppercase tracking-wider shadow-glow hover:bg-primary/90 hover:shadow-[0_0_28px_hsl(var(--primary)/0.55)] transition-all disabled:opacity-50"
+            className="group inline-flex items-center gap-2 px-3 sm:px-4 md:px-5 h-9 sm:h-10 rounded-lg bg-primary text-primary-foreground font-bold text-[11px] sm:text-xs md:text-sm uppercase tracking-wider shadow-glow hover:bg-primary/90 transition-all disabled:opacity-50"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <DiscordIcon className="h-4 w-4" />}
-            <span>Entrar com Discord</span>
+            <span className="hidden sm:inline">Entrar com Discord</span>
+            <span className="sm:hidden">Entrar</span>
           </button>
         </div>
       </header>
 
       {/* HERO */}
       <section className="relative pt-12 md:pt-20 pb-20 md:pb-28">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-100px] left-[-100px] w-[600px] h-[600px] rounded-full bg-primary/[0.08] blur-[140px]" />
-          <div className="absolute bottom-0 right-[-100px] w-[500px] h-[500px] rounded-full bg-primary-glow/[0.07] blur-[140px]" />
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-[-100px] left-[-100px] w-[400px] md:w-[600px] h-[400px] md:h-[600px] rounded-full bg-primary/[0.06] blur-[120px]" />
+          <div className="absolute bottom-0 right-[-100px] w-[350px] md:w-[500px] h-[350px] md:h-[500px] rounded-full bg-primary/[0.05] blur-[120px]" />
         </div>
 
         <div className="container mx-auto px-4 relative">

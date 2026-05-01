@@ -55,9 +55,9 @@
     --sidebar-ring: 235 86% 67%;
 
     /* Gradients & shadows */
-    --gradient-primary: linear-gradient(135deg, hsl(235 86% 67%), hsl(245 85% 60%));
-    --gradient-hero: radial-gradient(ellipse at top, hsl(235 86% 67% / 0.18), transparent 60%),
-                     radial-gradient(ellipse at bottom right, hsl(245 80% 55% / 0.12), transparent 60%);
+    --gradient-primary: linear-gradient(135deg, hsl(235 86% 67%), hsl(230 80% 55%));
+    --gradient-hero: radial-gradient(ellipse at top, hsl(235 86% 67% / 0.15), transparent 60%),
+                     radial-gradient(ellipse at bottom right, hsl(230 80% 55% / 0.10), transparent 60%);
     --shadow-glow: 0 0 40px hsl(235 86% 67% / 0.25);
     --shadow-card: 0 10px 30px -10px hsl(0 0% 0% / 0.7);
 
