@@ -39,6 +39,7 @@ const Dashboard = () => {
   });
   const [recentCampaigns, setRecentCampaigns] = useState<any[]>([]);
   const [serversCount, setServersCount] = useState(0);
+  const [weekly, setWeekly] = useState<{ day: string; delivered: number; clicks: number }[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -69,6 +70,27 @@ const Dashboard = () => {
       });
       setServersCount(count ?? 0);
       setRecentCampaigns(list.filter((c) => c.status === "sent").slice(0, 4));
+
+      // Build last 7 days series from real sent campaigns
+      const now = new Date();
+      const days: { day: string; delivered: number; clicks: number }[] = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(now.getDate() - i);
+        d.setHours(0, 0, 0, 0);
+        const next = new Date(d); next.setDate(d.getDate() + 1);
+        const dayItems = list.filter((c) => {
+          if (!c.sent_at) return false;
+          const t = new Date(c.sent_at).getTime();
+          return t >= d.getTime() && t < next.getTime();
+        });
+        days.push({
+          day: d.toLocaleDateString("pt-BR", { weekday: "short" }).slice(0, 3),
+          delivered: dayItems.reduce((a, c) => a + (c.total_delivered || 0), 0),
+          clicks: dayItems.reduce((a, c) => a + (c.total_clicks || 0), 0),
+        });
+      }
+      setWeekly(days);
     })();
   }, [user]);
 
