@@ -304,72 +304,106 @@ const Landing = () => {
           </div>
         </section>
 
-        <section id="planos" className="border-b border-border">
+        <section id="planos" className="border-b border-border bg-gradient-to-b from-background via-card/40 to-background">
           <div className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
-            <div className="mb-10 grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
-              <div>
-                <div className="mb-3 text-xs font-black uppercase text-primary">Planos sem mensalidade</div>
-                <h2 className="font-display text-4xl font-black leading-tight md:text-6xl">Preço simples. Volume que faz sentido.</h2>
+            <div className="mb-10 text-center">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-primary">
+                <Sparkles className="h-3 w-3" /> Você escolhe a quantidade
               </div>
-              <p className="max-w-2xl text-lg font-semibold leading-relaxed text-muted-foreground lg:ml-auto lg:text-right">
-                O plano barato valida. Os planos maiores dão bônus para quem quer volume de verdade.
+              <h2 className="font-display text-4xl font-black leading-tight md:text-6xl">
+                Sem plano. Sem mensalidade.
+              </h2>
+              <p className="mx-auto mt-4 max-w-2xl text-lg font-semibold text-muted-foreground">
+                Cada DM custa <b className="text-foreground">R$ 0,20</b>. Compra a quantia que precisar — mínimo 150 DMs.
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {plans.map((plan) => (
-                <article
-                  key={plan.name}
-                  className={`relative rounded-md p-5 transition-all hover:-translate-y-1 ${
-                    plan.highlight ? "bg-primary text-primary-foreground shadow-glow" : "border border-border bg-card hover:border-primary"
-                  }`}
-                >
-                  {plan.highlight && (
-                    <div className="absolute -top-3 left-4 inline-flex items-center gap-1 rounded-md bg-foreground px-3 py-1 text-[10px] font-black uppercase text-background">
-                      <Crown className="h-3 w-3" /> Mais forte
+            <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+              {/* Calculadora */}
+              <div className="relative overflow-hidden rounded-2xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 via-card to-card p-6 md:p-8 shadow-[0_0_60px_-20px_hsl(var(--primary)/0.5)]">
+                <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/15 blur-3xl" />
+                <div className="relative">
+                  <div className="text-[10px] uppercase tracking-widest font-black text-primary mb-2">Calculadora ao vivo</div>
+                  <h3 className="text-2xl md:text-3xl font-black mb-1">Quantas DMs você quer?</h3>
+                  <p className="text-xs text-muted-foreground mb-6">Arraste, digite ou escolha um atalho</p>
+
+                  <div className="rounded-xl bg-background/60 border border-border p-4 mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">DMs</span>
+                      <span className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Total PIX</span>
                     </div>
-                  )}
-                  <div className={`text-xs font-black uppercase ${plan.highlight ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{plan.hook}</div>
-                  <h3 className="mt-2 text-2xl font-black">{plan.name}</h3>
-                  <div className="mt-5 flex items-end gap-1">
-                    <span className="font-display text-5xl font-black leading-none">R${plan.price}</span>
-                    <span className={`pb-1 text-xs font-black ${plan.highlight ? "text-primary-foreground/75" : "text-muted-foreground"}`}>PIX</span>
-                  </div>
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <span className="text-xl font-black">{plan.dms.toLocaleString("pt-BR")} DMs</span>
-                    {plan.badge && (
-                      <span className={`rounded-md px-2 py-1 text-[10px] font-black uppercase ${plan.highlight ? "bg-foreground text-background" : "bg-success text-success-foreground"}`}>
-                        {plan.badge}
-                      </span>
-                    )}
-                  </div>
-                  <div className={`mt-2 text-xs font-bold ${plan.highlight ? "text-primary-foreground/75" : "text-muted-foreground"}`}>
-                    ≈ R$ {(plan.price / plan.dms).toFixed(3).replace(".", ",")} por DM
+                    <div className="flex items-baseline justify-between">
+                      <span className="font-display text-5xl md:text-6xl font-black text-primary tabular-nums">{dmCalc.toLocaleString("pt-BR")}</span>
+                      <span className="font-display text-3xl md:text-4xl font-black tabular-nums">R$ {(dmCalc * PRICE_PER_DM).toFixed(2).replace(".", ",")}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={MIN_DMS}
+                      max={5000}
+                      step={10}
+                      value={Math.min(5000, dmCalc)}
+                      onChange={(e) => setDmCalc(parseInt(e.target.value))}
+                      className="w-full mt-4 accent-primary cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground font-bold mt-1">
+                      <span>150</span><span>1k</span><span>2.5k</span><span>5k+</span>
+                    </div>
                   </div>
 
-                  <div className={`my-5 h-px ${plan.highlight ? "bg-primary-foreground/20" : "bg-border"}`} />
-                  <ul className="space-y-3 text-sm font-semibold">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex gap-2">
-                        <Check className="mt-0.5 h-4 w-4 shrink-0" />
-                        <span>{feature}</span>
-                      </li>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
+                    {quickPicks.map((p) => (
+                      <button
+                        key={p.dms}
+                        onClick={() => setDmCalc(p.dms)}
+                        className={`relative rounded-xl border-2 p-3 text-left transition ${
+                          dmCalc === p.dms ? "border-primary bg-primary/15 shadow-glow" : "border-border bg-background/40 hover:border-primary/40"
+                        }`}
+                      >
+                        {p.popular && <span className="absolute -top-2 left-2 rounded bg-primary text-primary-foreground text-[8px] font-black px-1.5 py-0.5 uppercase">Popular</span>}
+                        <div className="text-[9px] uppercase tracking-widest font-black text-muted-foreground">{p.label}</div>
+                        <div className="text-base font-black tabular-nums mt-0.5">{p.dms.toLocaleString("pt-BR")}</div>
+                        <div className="text-[10px] text-muted-foreground font-bold">R$ {(p.dms * PRICE_PER_DM).toFixed(2).replace(".", ",")}</div>
+                      </button>
                     ))}
-                  </ul>
+                  </div>
 
                   <button
                     onClick={loginWithDiscord}
                     disabled={busy}
-                    className={`mt-7 inline-flex h-12 w-full items-center justify-center gap-2 rounded-md text-sm font-black transition-colors disabled:opacity-60 ${
-                      plan.highlight ? "bg-foreground text-background hover:bg-background hover:text-foreground" : "bg-primary text-primary-foreground hover:bg-primary-glow"
-                    }`}
+                    className="group inline-flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-primary text-primary-foreground text-base font-black shadow-glow transition-all hover:bg-primary-glow disabled:opacity-60"
                   >
-                    <WalletCards className="h-4 w-4" /> Comprar esse
+                    {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <WalletCards className="h-5 w-5" />}
+                    Comprar {dmCalc.toLocaleString("pt-BR")} DMs por R$ {(dmCalc * PRICE_PER_DM).toFixed(2).replace(".", ",")}
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </button>
-                </article>
-              ))}
+                </div>
+              </div>
+
+              {/* Benefícios */}
+              <div className="space-y-3">
+                {[
+                  { icon: Zap, title: "PIX libera na hora", text: "Confirmou pagamento, DMs caem na conta automaticamente." },
+                  { icon: Target, title: "Segmentação por nicho", text: "Escolhe Games, Cripto, Trading, Adulto, etc — só fala com público real." },
+                  { icon: ShieldCheck, title: "DMs nunca expiram", text: "Comprou e não usou? Fica no saldo até você decidir disparar." },
+                  { icon: BarChart3, title: "Painel com tudo", text: "Acompanha entrega, cliques e falhas em tempo real." },
+                ].map((b) => {
+                  const I = b.icon;
+                  return (
+                    <div key={b.title} className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 hover:border-primary transition">
+                      <div className="h-10 w-10 rounded-lg bg-primary/15 grid place-items-center shrink-0">
+                        <I className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <div className="font-black text-sm">{b.title}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">{b.text}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
+        </section>
         </section>
 
         <section id="prova" className="border-b border-border bg-secondary/30">
