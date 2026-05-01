@@ -74,7 +74,7 @@ const Credits = () => {
       setChecking(true);
       try {
         const { data } = await supabase.functions.invoke("check-deposit", { body: { reference: pix.ref } });
-        if (!cancelled && data?.status === "paid") {
+        if (!cancelled && (data?.status === "paid" || data?.status === "approved")) {
           setPaid(true);
           toast.success(`Pagamento confirmado! +${pix.coins} DMs no saldo 🎉`);
         }
