@@ -132,31 +132,31 @@ const Dashboard = () => {
       {/* HERO PRINCIPAL */}
       <div className="grid lg:grid-cols-[1fr,1fr] gap-4">
         {/* Saldo */}
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-primary via-primary to-primary-glow p-6 md:p-8 text-white shadow-glow">
-          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute -left-10 -bottom-20 h-60 w-60 rounded-full bg-white/10 blur-3xl" />
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-card via-card to-background border-2 border-primary/30 p-6 md:p-8 shadow-card">
+          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+          <div className="absolute -left-10 -bottom-20 h-60 w-60 rounded-full bg-destructive/5 blur-3xl pointer-events-none" />
           <div className="relative space-y-4">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur text-[10px] uppercase tracking-widest font-black">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/15 text-primary text-[10px] uppercase tracking-widest font-black">
               <Sparkles className="h-3 w-3" /> Olá {profile?.discord_username || profile?.username || ""}
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-widest font-bold opacity-80">Saldo de DMs</div>
+              <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Saldo de DMs</div>
               <div className="flex items-baseline gap-2 flex-wrap mt-1">
-                <span className="text-5xl md:text-6xl font-black tracking-tighter tabular-nums">{formatDMs(dms)}</span>
-                <span className="text-xl font-bold opacity-70">DMs</span>
+                <span className="text-5xl md:text-6xl font-black tracking-tighter tabular-nums text-primary">{formatDMs(dms)}</span>
+                <span className="text-xl font-bold text-muted-foreground">DMs</span>
               </div>
-              <div className="text-sm opacity-90 mt-1">
-                ≈ <strong>{formatBRL(dms * PRICE_PER_DM)}</strong> · 1 DM = R$ 0,20
+              <div className="text-sm text-muted-foreground mt-1">
+                ≈ <strong className="text-foreground">{formatBRL(dms * PRICE_PER_DM)}</strong> · 1 DM = R$ 0,20
               </div>
             </div>
             <div className="flex flex-wrap gap-2 pt-2">
               <Link to="/app/creditos" className="flex-1 min-w-[140px]">
-                <Button variant="secondary" className="w-full gap-2 backdrop-blur bg-white/20 border border-white/20 text-white hover:bg-white/30 font-bold">
+                <Button variant="outline" className="w-full gap-2 font-bold border-primary/40 hover:bg-primary/10">
                   <Plus className="h-4 w-4" /> Comprar DMs
                 </Button>
               </Link>
               <Link to="/app/campanhas/nova" className="flex-1 min-w-[140px]">
-                <Button className="w-full bg-white text-primary hover:bg-white/90 gap-2 font-black shadow-xl">
+                <Button variant="discord" className="w-full gap-2 font-black">
                   <Zap className="h-4 w-4" /> Nova campanha
                 </Button>
               </Link>
