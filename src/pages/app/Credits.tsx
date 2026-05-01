@@ -296,11 +296,11 @@ const Credits = () => {
 
       {/* DIALOG PIX — REDESIGN MOBILE-FIRST */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md p-0 gap-0 overflow-hidden border-2 border-primary/40 bg-card">
+        <DialogContent className="w-[calc(100vw-1.5rem)] max-w-md max-h-[92svh] overflow-y-auto p-0 gap-0 border border-primary/40 bg-card rounded-lg">
           {/* Botão fechar */}
           <button
             onClick={() => setOpen(false)}
-            className="absolute right-3 top-3 z-20 h-8 w-8 rounded-full bg-background/80 backdrop-blur grid place-items-center hover:bg-background transition"
+            className="absolute right-3 top-3 z-20 h-8 w-8 rounded-full bg-background/90 grid place-items-center hover:bg-background transition"
             aria-label="Fechar"
           >
             <X className="h-4 w-4" />
@@ -308,11 +308,10 @@ const Credits = () => {
 
           {!paid && pix && (
             <div className="flex flex-col">
-              {/* HEADER GRADIENTE */}
-              <div className="relative bg-gradient-to-br from-primary via-primary to-primary/70 p-5 pb-8 text-primary-foreground overflow-hidden">
-                <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-                <div className="relative">
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/20 text-[10px] uppercase tracking-widest font-black mb-2">
+              {/* HEADER */}
+              <div className="bg-primary p-5 pb-8 text-primary-foreground">
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary-foreground/18 text-[10px] uppercase tracking-widest font-black mb-2">
                     <QrCode className="h-3 w-3" /> Pague com PIX
                   </div>
                   <div className="flex items-end justify-between gap-3">
@@ -328,23 +327,31 @@ const Credits = () => {
                 </div>
               </div>
 
-              {/* QR CODE — flutuando sobre o header */}
+              {/* QR CODE — gerado localmente para não sumir */}
               <div className="px-5 -mt-5 relative z-10">
                 <div className="rounded-2xl bg-white p-3 shadow-xl mx-auto w-fit">
                   {pix.qr ? (
                     <img src={`data:image/png;base64,${pix.qr}`} alt="QR Code PIX" className="h-48 w-48 block" />
+                  ) : pix.qrDataUrl ? (
+                    <img src={pix.qrDataUrl} alt="QR Code PIX" className="h-48 w-48 block" />
                   ) : (
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(pix.code)}`}
-                      alt="QR Code PIX"
-                      className="h-48 w-48 block"
-                    />
+                    <div className="h-48 w-48 grid place-items-center text-background">
+                      <Loader2 className="h-7 w-7 animate-spin" />
+                    </div>
                   )}
                 </div>
                 <p className="text-center text-xs text-muted-foreground mt-3 px-4">
                   Aponte a câmera do app do seu banco para o QR acima
                 </p>
               </div>
+
+              {paymentNotice && (
+                <div className="px-5 mt-3">
+                  <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs font-semibold text-warning">
+                    {paymentNotice}
+                  </div>
+                </div>
+              )}
 
               {/* DIVISOR "OU" */}
               <div className="flex items-center gap-3 px-5 my-4">
