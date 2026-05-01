@@ -217,58 +217,7 @@ export default function MyBot() {
     );
   }
 
-  // ===== ETAPA 3: Sem pagamento =====
-  if (!bot.access_paid) {
-    return (
-      <div className="max-w-3xl mx-auto space-y-6">
-        <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary-glow/5 border-primary/30 text-center space-y-4">
-          <div className="inline-flex h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary-glow items-center justify-center shadow-glow mx-auto">
-            <Sparkles className="h-8 w-8 text-primary-foreground" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold">Libere o acesso vitalício</h2>
-            <p className="text-muted-foreground mt-2">
-              Pague <b className="text-primary text-3xl">R$ 10</b> uma única vez e dispare divulgações ilimitadas* pelo seu próprio bot.
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">*Limite de 3 disparos por dia, para proteger seu bot de bans do Discord.</p>
-          </div>
-          <Button size="lg" onClick={startPay} disabled={creatingPay} className="bg-gradient-to-r from-primary to-primary-glow">
-            {creatingPay ? <Loader2 className="h-4 w-4 animate-spin" /> : <><QrCode className="h-4 w-4" /> Pagar R$ 10 com PIX</>}
-          </Button>
-        </Card>
-
-        <Dialog open={payOpen} onOpenChange={setPayOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Pagamento PIX · R$ 10,00</DialogTitle>
-            </DialogHeader>
-            {pay && (
-              <div className="space-y-4">
-                {pay.qr_code_base64 && (
-                  <div className="bg-white p-4 rounded-xl flex justify-center">
-                    <img src={pay.qr_code_base64.startsWith("data:") ? pay.qr_code_base64 : `data:image/png;base64,${pay.qr_code_base64}`}
-                      className="w-56 h-56" alt="QR Code PIX" />
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <Label>Código PIX (copia e cola)</Label>
-                  <div className="flex gap-2">
-                    <Input value={pay.pix_code} readOnly className="font-mono text-xs" />
-                    <Button onClick={copyPix} size="icon"><Copy className="h-4 w-4" /></Button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Aguardando pagamento...
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
-    );
-  }
-
-  // ===== ETAPA 4: Tudo liberado - Dashboard + Form =====
+  // ===== ETAPA 3: Dashboard + Form (acesso gratuito por enquanto) =====
   const broadcastsToday = broadcasts.filter(b =>
     new Date(b.created_at).getTime() > Date.now() - 24 * 60 * 60 * 1000
   ).length;
