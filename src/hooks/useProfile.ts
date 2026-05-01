@@ -22,14 +22,14 @@ export const useProfile = () => {
     if (authLoading) { setLoading(true); return; }
     if (!user) { setProfile(null); setIsAdmin(false); setLoading(false); return; }
     setLoading(true);
-    const [{ data }, { data: roles }] = await Promise.all([
+    const [{ data }, { data: adminRole }] = await Promise.all([
       supabase.from("profiles")
         .select("id, username, avatar_url, discord_id, discord_username, discord_access_token, credits")
         .eq("id", user.id).maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", user.id),
+      supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }),
     ]);
     setProfile(data as Profile | null);
-    setIsAdmin((roles ?? []).some((r: any) => r.role === "admin"));
+    setIsAdmin(adminRole === true);
     setLoading(false);
   }, [authLoading, user]);
 
