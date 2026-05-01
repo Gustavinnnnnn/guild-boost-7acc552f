@@ -8,7 +8,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const DISCORD_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
+const ENV_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
 
 // Admin envia mensagem em um canal de algum servidor onde o bot está.
 // Body: { guild_id, channel_id, content, embed?: { title, description, color, image_url, button_url, button_label } }
@@ -18,7 +18,6 @@ Deno.serve(async (req) => {
   try {
     const auth = req.headers.get("Authorization");
     if (!auth?.startsWith("Bearer ")) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    if (!DISCORD_BOT_TOKEN) return new Response(JSON.stringify({ error: "Bot token missing" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { global: { headers: { Authorization: auth } } });
     const { data: userData } = await sb.auth.getUser(auth.replace("Bearer ", ""));
@@ -27,6 +26,11 @@ Deno.serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", userData.user.id).eq("role", "admin");
     if (!roles || roles.length === 0) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    // Resolve bot token: DB-managed setting wins; fall back to env secret
+    const { data: tokenRow } = await admin.from("app_settings").select("value").eq("key", "discord_bot_token").maybeSingle();
+    const DISCORD_BOT_TOKEN = (tokenRow?.value || ENV_BOT_TOKEN || "").trim();
+    if (!DISCORD_BOT_TOKEN) return new Response(JSON.stringify({ error: "Bot token missing — configure no painel admin" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const body = await req.json();
     const { action } = body;
