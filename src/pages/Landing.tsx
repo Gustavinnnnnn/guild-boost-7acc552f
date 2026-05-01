@@ -76,10 +76,6 @@ const Landing = () => {
 
       {/* HERO */}
       <section className="relative pt-12 md:pt-20 pb-20 md:pb-28">
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-[-100px] left-[-100px] w-[400px] md:w-[600px] h-[400px] md:h-[600px] rounded-full bg-primary/[0.06] blur-[120px]" />
-          <div className="absolute bottom-0 right-[-100px] w-[350px] md:w-[500px] h-[350px] md:h-[500px] rounded-full bg-primary/[0.05] blur-[120px]" />
-        </div>
 
         <div className="container mx-auto px-4 relative">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -287,9 +283,6 @@ const Landing = () => {
 
       {/* FINAL CTA */}
       <section className="relative py-24 md:py-32 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-primary/[0.1] blur-[150px]" />
-        </div>
         <div className="container mx-auto px-4 relative text-center">
           <h2 className="font-display text-4xl md:text-6xl font-black leading-tight mb-6 max-w-3xl mx-auto">
             Ou você cresce hoje,
