@@ -1,6 +1,6 @@
-import 'dotenv/config';
+import { config } from './config.js';
 import {
-  Client, GatewayIntentBits, Collection, Events, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder,
+  Client, GatewayIntentBits, Collection, Events, ActionRowBuilder, ButtonBuilder, ButtonStyle,
 } from 'discord.js';
 import { readdir } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -9,6 +9,11 @@ import { callApi, userPayload } from './api.js';
 import { drafts, buildModal, buildPreview } from './commands/divulgar.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+if (!config.DISCORD_TOKEN || config.DISCORD_TOKEN.includes('COLE_')) {
+  console.error('❌ DISCORD_TOKEN não preenchido em src/config.js');
+  process.exit(1);
+}
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -140,4 +145,4 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(config.DISCORD_TOKEN);
