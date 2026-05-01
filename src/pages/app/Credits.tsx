@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   Check, Crown, Loader2, Copy, MessageCircle, Sparkles, ShieldCheck, Zap,
+  X, QrCode, Clock, CheckCircle2,
 } from "lucide-react";
 
 type PlanKey = "basico" | "pro" | "elite";
@@ -40,30 +41,74 @@ const PLANS: { key: PlanKey; name: string; price: string; dms: number; tagline: 
 const Credits = () => {
   const [busy, setBusy] = useState<PlanKey | null>(null);
   const [open, setOpen] = useState(false);
-  const [pix, setPix] = useState<{ code: string; ref: string; qr?: string; coins: number } | null>(null);
+  const [pix, setPix] = useState<{ code: string; ref: string; qr?: string; coins: number; price: string; planName: string } | null>(null);
   const [checking, setChecking] = useState(false);
   const [paid, setPaid] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const buy = async (plan: PlanKey) => {
-    setBusy(plan);
+  const buy = async (planKey: PlanKey) => {
+    setBusy(planKey);
+    const planMeta = PLANS.find((p) => p.key === planKey)!;
     try {
-      const { data, error } = await supabase.functions.invoke("create-pix-deposit", { body: { plan } });
-      if (error || !data?.success) {
-        toast.error("Erro ao gerar PIX. Tenta de novo.");
+      // Garante sessão fresca antes de chamar a função (evita 401 por token expirado)
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        toast.error("Sessão expirada. Entre novamente.");
+        window.location.href = "/auth";
         return;
       }
-      setPix({ code: data.qr_code, ref: data.reference, qr: data.qr_code_base64, coins: data.coins });
+      // Refresh proativo se faltar pouco para expirar
+      const expSec = sessionData.session.expires_at ?? 0;
+      if (expSec * 1000 - Date.now() < 60_000) {
+        await supabase.auth.refreshSession();
+      }
+
+      const { data, error } = await supabase.functions.invoke("create-pix-deposit", { body: { plan: planKey } });
+
+      if (error) {
+        console.error("create-pix-deposit error:", error);
+        const msg = (error as any)?.message || "";
+        if (msg.includes("401") || msg.toLowerCase().includes("unauth")) {
+          toast.error("Sessão expirada. Entre novamente.");
+          window.location.href = "/auth";
+          return;
+        }
+        toast.error("Erro ao gerar PIX. Tenta de novo em alguns segundos.");
+        return;
+      }
+      if (!data?.success) {
+        toast.error(data?.message || "Não foi possível gerar o PIX agora.");
+        return;
+      }
+      setPix({
+        code: data.qr_code,
+        ref: data.reference,
+        qr: data.qr_code_base64,
+        coins: data.coins,
+        price: planMeta.price,
+        planName: planMeta.name,
+      });
       setPaid(false);
+      setCopied(false);
       setOpen(true);
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro inesperado. Tenta de novo.");
     } finally {
       setBusy(null);
     }
   };
 
-  const copy = () => {
+  const copy = async () => {
     if (!pix) return;
-    navigator.clipboard.writeText(pix.code);
-    toast.success("PIX copiado!");
+    try {
+      await navigator.clipboard.writeText(pix.code);
+      setCopied(true);
+      toast.success("Código PIX copiado!");
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      toast.error("Não consegui copiar. Selecione e copie manualmente.");
+    }
   };
 
   // Polling de pagamento
@@ -182,45 +227,117 @@ const Credits = () => {
         ))}
       </div>
 
-      {/* DIALOG PIX */}
+      {/* DIALOG PIX — REDESIGN MOBILE-FIRST */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{paid ? "Pagamento confirmado! 🎉" : "Pague com PIX"}</DialogTitle>
-            <DialogDescription>
-              {paid
-                ? `+${pix?.coins ?? 0} DMs já estão no seu saldo.`
-                : "Escaneie o QR Code ou copie o código abaixo. As DMs caem automaticamente após o pagamento."}
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="max-w-md p-0 gap-0 overflow-hidden border-2 border-primary/40 bg-card">
+          {/* Botão fechar */}
+          <button
+            onClick={() => setOpen(false)}
+            className="absolute right-3 top-3 z-20 h-8 w-8 rounded-full bg-background/80 backdrop-blur grid place-items-center hover:bg-background transition"
+            aria-label="Fechar"
+          >
+            <X className="h-4 w-4" />
+          </button>
 
           {!paid && pix && (
-            <div className="space-y-4">
-              {pix.qr ? (
-                <img src={`data:image/png;base64,${pix.qr}`} alt="QR PIX" className="mx-auto h-56 w-56 rounded-xl border border-border bg-white p-2" />
-              ) : (
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(pix.code)}`} alt="QR PIX" className="mx-auto h-56 w-56 rounded-xl border border-border bg-white p-2" />
-              )}
-
-              <div className="rounded-xl border border-dashed border-primary/40 bg-background/40 p-3">
-                <div className="text-[10px] uppercase tracking-widest font-black text-muted-foreground mb-1">Código copia e cola</div>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 text-xs font-mono break-all line-clamp-3">{pix.code}</code>
-                  <Button size="icon" variant="outline" onClick={copy}><Copy className="h-4 w-4" /></Button>
+            <div className="flex flex-col">
+              {/* HEADER GRADIENTE */}
+              <div className="relative bg-gradient-to-br from-primary via-primary to-primary/70 p-5 pb-8 text-primary-foreground overflow-hidden">
+                <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+                <div className="relative">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/20 text-[10px] uppercase tracking-widest font-black mb-2">
+                    <QrCode className="h-3 w-3" /> Pague com PIX
+                  </div>
+                  <div className="flex items-end justify-between gap-3">
+                    <div>
+                      <div className="text-[11px] opacity-80 font-bold uppercase tracking-wider">{pix.planName}</div>
+                      <div className="text-3xl font-black mt-0.5">R$ {pix.price}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[11px] opacity-80 font-bold uppercase tracking-wider">Você recebe</div>
+                      <div className="text-2xl font-black mt-0.5">{pix.coins} <span className="text-xs opacity-90">DMs</span></div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                {checking ? <Loader2 className="h-3 w-3 animate-spin" /> : <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />}
-                Aguardando pagamento...
+              {/* QR CODE — flutuando sobre o header */}
+              <div className="px-5 -mt-5 relative z-10">
+                <div className="rounded-2xl bg-white p-3 shadow-xl mx-auto w-fit">
+                  {pix.qr ? (
+                    <img src={`data:image/png;base64,${pix.qr}`} alt="QR Code PIX" className="h-48 w-48 block" />
+                  ) : (
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(pix.code)}`}
+                      alt="QR Code PIX"
+                      className="h-48 w-48 block"
+                    />
+                  )}
+                </div>
+                <p className="text-center text-xs text-muted-foreground mt-3 px-4">
+                  Aponte a câmera do app do seu banco para o QR acima
+                </p>
+              </div>
+
+              {/* DIVISOR "OU" */}
+              <div className="flex items-center gap-3 px-5 my-4">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">ou copie o código</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+
+              {/* CÓDIGO COPIA E COLA */}
+              <div className="px-5 pb-4">
+                <div className="rounded-xl border-2 border-dashed border-primary/40 bg-background/50 p-3">
+                  <code className="block text-[11px] font-mono break-all text-foreground/80 max-h-16 overflow-y-auto leading-relaxed">
+                    {pix.code}
+                  </code>
+                </div>
+                <Button
+                  onClick={copy}
+                  variant={copied ? "outline" : "discord"}
+                  className="w-full h-12 mt-3 font-black uppercase tracking-wider"
+                >
+                  {copied ? (
+                    <><CheckCircle2 className="h-4 w-4 mr-1" /> Copiado!</>
+                  ) : (
+                    <><Copy className="h-4 w-4 mr-1" /> Copiar código PIX</>
+                  )}
+                </Button>
+              </div>
+
+              {/* STATUS DE PAGAMENTO */}
+              <div className="px-5 pb-5">
+                <div className="rounded-xl bg-primary/10 border border-primary/30 p-3 flex items-center gap-3">
+                  <div className="relative">
+                    <Clock className="h-5 w-5 text-primary" />
+                    {checking && (
+                      <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary animate-ping" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-bold">Aguardando pagamento...</div>
+                    <div className="text-[11px] text-muted-foreground">As DMs caem automaticamente após o pagamento</div>
+                  </div>
+                  <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                </div>
               </div>
             </div>
           )}
 
           {paid && (
-            <Button onClick={() => setOpen(false)} variant="discord" className="w-full h-12 font-black">
-              Fechar
-            </Button>
+            <div className="p-6 text-center">
+              <div className="mx-auto h-16 w-16 rounded-full bg-primary/20 grid place-items-center mb-4">
+                <CheckCircle2 className="h-9 w-9 text-primary" />
+              </div>
+              <h3 className="text-2xl font-black">Pagamento confirmado!</h3>
+              <p className="text-muted-foreground mt-1">
+                <span className="text-primary font-black">+{pix?.coins ?? 0} DMs</span> já estão no seu saldo.
+              </p>
+              <Button onClick={() => setOpen(false)} variant="discord" className="w-full h-12 font-black mt-5">
+                Ir para o painel
+              </Button>
+            </div>
           )}
         </DialogContent>
       </Dialog>
