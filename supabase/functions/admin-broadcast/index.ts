@@ -56,7 +56,15 @@ Deno.serve(async (req) => {
       const r = await fetch(`https://discord.com/api/v10/guilds/${guild_id}/channels`, {
         headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` },
       });
-      if (!r.ok) return new Response(JSON.stringify({ error: "discord_fail", detail: await r.text() }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (!r.ok) {
+        const detail = await r.text();
+        const msg = r.status === 401
+          ? "Token do bot inválido ou expirado. Atualize no painel."
+          : r.status === 403
+          ? "Bot não tem permissão nesse servidor."
+          : "Falha ao listar canais";
+        return new Response(JSON.stringify({ error: msg, detail, status: r.status }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
       const channels = (await r.json()).filter((c: any) => c.type === 0 || c.type === 5); // text + announcement
       return new Response(JSON.stringify({ success: true, channels }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
