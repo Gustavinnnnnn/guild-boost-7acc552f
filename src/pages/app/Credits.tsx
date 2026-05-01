@@ -3,21 +3,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import QRCode from "qrcode";
 import {
   Check, Crown, Loader2, Copy, MessageCircle, Sparkles, ShieldCheck, Zap,
-  X, QrCode, Clock, CheckCircle2,
+  X, QrCode, Clock, CheckCircle2, Target, TrendingUp, Radio,
 } from "lucide-react";
 
 type PlanKey = "basico" | "pro" | "elite";
+type PixState = { code: string; ref: string; qr?: string; qrDataUrl?: string; coins: number; price: string; planName: string; planKey: PlanKey; expiresAt?: string | null };
 
-const PLANS: { key: PlanKey; name: string; price: string; dms: number; tagline: string; perks: string[]; highlight?: boolean }[] = [
+const PLANS: { key: PlanKey; name: string; price: string; dms: number; tagline: string; angle: string; badge: string; perks: string[]; highlight?: boolean }[] = [
   {
     key: "basico",
     name: "Básico",
     price: "19",
     dms: 90,
     tagline: "Pra começar",
-    perks: ["90 DMs no saldo", "Disparo segmentado", "Métricas no painel"],
+    angle: "Teste rápido de audiência",
+    badge: "Entrada",
+    perks: ["Saldo liberado após confirmação", "Campanha com métrica", "Ideal pra validar oferta"],
   },
   {
     key: "pro",
@@ -25,7 +29,9 @@ const PLANS: { key: PlanKey; name: string; price: string; dms: number; tagline: 
     price: "39",
     dms: 220,
     tagline: "Mais comprado",
-    perks: ["220 DMs no saldo", "Melhor custo por DM", "Prioridade na fila", "Suporte rápido"],
+    angle: "Volume forte pra conversão",
+    badge: "Melhor escala",
+    perks: ["Maior volume por recarga", "Custo por DM mais agressivo", "Prioridade na fila", "Suporte rápido"],
     highlight: true,
   },
   {
@@ -34,66 +40,95 @@ const PLANS: { key: PlanKey; name: string; price: string; dms: number; tagline: 
     price: "79",
     dms: 500,
     tagline: "Pra escalar",
-    perks: ["500 DMs no saldo", "Custo por DM mais baixo", "Suporte VIP"],
+    angle: "Disparo pesado de tráfego",
+    badge: "Máxima força",
+    perks: ["Maior poder de disparo", "Menor custo por DM", "Suporte VIP", "Feito pra escalar servidor"],
   },
 ];
+
+const callPaymentFunction = async <T,>(functionName: string, payload: Record<string, unknown>): Promise<T> => {
+  const { data: sessionData } = await supabase.auth.getSession();
+  let session = sessionData.session;
+
+  if (!session) throw new Error("auth_required");
+
+  const expSec = session.expires_at ?? 0;
+  if (expSec * 1000 - Date.now() < 60_000) {
+    const { data: refreshed, error } = await supabase.auth.refreshSession();
+    if (error || !refreshed.session) throw new Error("auth_required");
+    session = refreshed.session;
+  }
+
+  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.access_token}`,
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const text = await response.text();
+  const result = text ? JSON.parse(text) : null;
+  if (!response.ok) {
+    const message = result?.message || result?.error || `payment_function_${response.status}`;
+    throw new Error(message);
+  }
+  return result as T;
+};
 
 const Credits = () => {
   const [busy, setBusy] = useState<PlanKey | null>(null);
   const [open, setOpen] = useState(false);
-  const [pix, setPix] = useState<{ code: string; ref: string; qr?: string; coins: number; price: string; planName: string } | null>(null);
+  const [pix, setPix] = useState<PixState | null>(null);
   const [checking, setChecking] = useState(false);
   const [paid, setPaid] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [paymentNotice, setPaymentNotice] = useState<string | null>(null);
 
   const buy = async (planKey: PlanKey) => {
     setBusy(planKey);
     const planMeta = PLANS.find((p) => p.key === planKey)!;
     try {
-      // Garante sessão fresca antes de chamar a função (evita 401 por token expirado)
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        toast.error("Sessão expirada. Entre novamente.");
-        window.location.href = "/auth";
-        return;
-      }
-      // Refresh proativo se faltar pouco para expirar
-      const expSec = sessionData.session.expires_at ?? 0;
-      if (expSec * 1000 - Date.now() < 60_000) {
-        await supabase.auth.refreshSession();
-      }
+      const data = await callPaymentFunction<{
+        success?: boolean;
+        message?: string;
+        qr_code?: string;
+        reference?: string;
+        qr_code_base64?: string;
+        coins?: number;
+        expires_at?: string | null;
+      }>("create-pix-deposit", { plan: planKey });
 
-      const { data, error } = await supabase.functions.invoke("create-pix-deposit", { body: { plan: planKey } });
-
-      if (error) {
-        console.error("create-pix-deposit error:", error);
-        const msg = (error as any)?.message || "";
-        if (msg.includes("401") || msg.toLowerCase().includes("unauth")) {
-          toast.error("Sessão expirada. Entre novamente.");
-          window.location.href = "/auth";
-          return;
-        }
-        toast.error("Erro ao gerar PIX. Tenta de novo em alguns segundos.");
-        return;
-      }
       if (!data?.success) {
         toast.error(data?.message || "Não foi possível gerar o PIX agora.");
         return;
       }
+      const qrCode = data.qr_code || "";
       setPix({
-        code: data.qr_code,
-        ref: data.reference,
+        code: qrCode,
+        ref: data.reference || "",
         qr: data.qr_code_base64,
-        coins: data.coins,
+        coins: data.coins || planMeta.dms,
         price: planMeta.price,
         planName: planMeta.name,
+        planKey,
+        expiresAt: data.expires_at,
       });
       setPaid(false);
       setCopied(false);
+      setPaymentNotice(null);
       setOpen(true);
     } catch (e) {
       console.error(e);
-      toast.error("Erro inesperado. Tenta de novo.");
+      const msg = e instanceof Error ? e.message : "";
+      if (msg.includes("auth") || msg.includes("Unauthorized") || msg.includes("401")) {
+        toast.error("Sessão expirada. Entre novamente.");
+        window.location.href = "/auth";
+        return;
+      }
+      toast.error("Erro ao gerar PIX. Tenta de novo em alguns segundos.");
     } finally {
       setBusy(null);
     }
@@ -111,6 +146,19 @@ const Credits = () => {
     }
   };
 
+  useEffect(() => {
+    if (!pix?.code || pix.qrDataUrl || pix.qr) return;
+    let cancelled = false;
+    QRCode.toDataURL(pix.code, { width: 320, margin: 1, errorCorrectionLevel: "M" })
+      .then((url) => {
+        if (!cancelled) setPix((current) => current?.ref === pix.ref ? { ...current, qrDataUrl: url } : current);
+      })
+      .catch(() => {
+        if (!cancelled) setPaymentNotice("O QR visual não carregou, mas o código copia e cola abaixo continua válido.");
+      });
+    return () => { cancelled = true; };
+  }, [pix?.code, pix?.qr, pix?.qrDataUrl, pix?.ref]);
+
   // Polling de pagamento
   useEffect(() => {
     if (!open || !pix || paid) return;
@@ -118,12 +166,17 @@ const Credits = () => {
     const tick = async () => {
       setChecking(true);
       try {
-        const { data } = await supabase.functions.invoke("check-deposit", { body: { reference: pix.ref } });
+        const data = await callPaymentFunction<{ status?: string; coins?: number; error?: string }>("check-deposit", { reference: pix.ref });
         if (!cancelled && (data?.status === "paid" || data?.status === "approved")) {
           setPaid(true);
+          window.dispatchEvent(new Event("profile:refresh"));
           toast.success(`Pagamento confirmado! +${pix.coins} DMs no saldo 🎉`);
+        } else if (!cancelled && ["expired", "cancelled", "canceled", "failed"].includes(data?.status || "")) {
+          setPaymentNotice("Esse PIX ficou inativo. Gere outro pagamento para receber um QR novo.");
         }
-      } catch {/* ignore */}
+      } catch {
+        if (!cancelled) setPaymentNotice("Não consegui verificar agora, mas o QR e o copia e cola continuam na tela para pagamento.");
+      }
       finally { setChecking(false); }
     };
     tick();
@@ -148,66 +201,81 @@ const Credits = () => {
       </div>
 
       {/* PLANOS */}
-      <div className="grid md:grid-cols-3 gap-5">
-        {PLANS.map((p) => (
-          <div
-            key={p.key}
-            className={`relative rounded-3xl p-6 md:p-7 transition-all flex flex-col ${
-              p.highlight
-                ? "border-2 border-primary bg-gradient-to-br from-primary/10 via-card to-card shadow-[0_0_50px_-10px_hsl(var(--primary)/0.6)] md:scale-[1.04]"
-                : "border border-border bg-card hover:border-primary/40"
-            }`}
-          >
-            {p.highlight && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-wider shadow-glow flex items-center gap-1">
-                <Crown className="h-3 w-3" /> {p.tagline}
-              </div>
-            )}
-
-            <div className="text-center mb-5 mt-1">
-              <div className="text-xl font-black tracking-tight">{p.name}</div>
-              {!p.highlight && (
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mt-0.5">
-                  {p.tagline}
-                </div>
-              )}
-            </div>
-
-            <div className="text-center mb-6">
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="text-sm text-muted-foreground">R$</span>
-                <span className={`text-5xl font-black ${p.highlight ? "text-primary" : ""}`}>{p.price}</span>
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">pagamento único · PIX</div>
-            </div>
-
-            <div className="rounded-xl bg-background/40 border border-border p-3 mb-5 text-center">
-              <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Você recebe</div>
-              <div className={`text-2xl font-black mt-0.5 ${p.highlight ? "text-primary" : ""}`}>
-                {p.dms.toLocaleString("pt-BR")} <span className="text-sm font-bold text-muted-foreground">DMs</span>
-              </div>
-            </div>
-
-            <ul className="space-y-2.5 mb-6 flex-1">
-              {p.perks.map((perk) => (
-                <li key={perk} className="flex items-start gap-2 text-sm">
-                  <Check className={`h-4 w-4 mt-0.5 shrink-0 ${p.highlight ? "text-primary" : "text-muted-foreground"}`} />
-                  <span>{perk}</span>
-                </li>
-              ))}
-            </ul>
-
-            <Button
-              onClick={() => buy(p.key)}
-              disabled={busy !== null}
-              variant={p.highlight ? "discord" : "outline"}
-              className="w-full h-12 font-black uppercase tracking-wider"
+      <div className="grid md:grid-cols-3 gap-4 md:gap-5 items-stretch">
+        {PLANS.map((p) => {
+          const PlanIcon = p.key === "basico" ? Target : p.key === "pro" ? TrendingUp : Radio;
+          return (
+            <div
+              key={p.key}
+              className={`relative overflow-hidden rounded-lg border p-5 md:p-6 transition-all flex flex-col min-h-[430px] ${
+                p.highlight
+                  ? "border-primary bg-gradient-to-b from-primary/18 via-card to-card md:-translate-y-2"
+                  : "border-border bg-card hover:border-primary/50"
+              }`}
             >
-              {busy === p.key ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
-              Comprar agora
-            </Button>
-          </div>
-        ))}
+              <div className="flex items-start justify-between gap-3 mb-5">
+                <div className={`h-12 w-12 rounded-lg grid place-items-center ${p.highlight ? "bg-primary text-primary-foreground" : "bg-primary/12 text-primary"}`}>
+                  <PlanIcon className="h-5 w-5" />
+                </div>
+                <div className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${p.highlight ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
+                  {p.badge}
+                </div>
+              </div>
+
+              <div className="mb-5">
+                <div className="text-2xl font-black tracking-tight">{p.name}</div>
+                <div className="text-sm font-semibold text-muted-foreground mt-1">{p.angle}</div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-background/55 p-4 mb-4">
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Investimento</div>
+                    <div className="flex items-baseline gap-1 mt-1">
+                      <span className="text-sm text-muted-foreground">R$</span>
+                      <span className={`text-5xl font-black leading-none ${p.highlight ? "text-primary" : "text-foreground"}`}>{p.price}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Entrega</div>
+                    <div className={`text-2xl font-black mt-1 ${p.highlight ? "text-primary" : "text-foreground"}`}>{p.dms.toLocaleString("pt-BR")}</div>
+                    <div className="text-[10px] font-bold text-muted-foreground">DMs</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mb-5">
+                <div className="rounded-lg bg-secondary/70 p-3">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-black">PIX</div>
+                  <div className="text-sm font-black mt-1">Na hora</div>
+                </div>
+                <div className="rounded-lg bg-secondary/70 p-3">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-black">Saldo</div>
+                  <div className="text-sm font-black mt-1">Não expira</div>
+                </div>
+              </div>
+
+              <ul className="space-y-2.5 mb-6 flex-1">
+                {p.perks.map((perk) => (
+                  <li key={perk} className="flex items-start gap-2 text-sm">
+                    <Check className={`h-4 w-4 mt-0.5 shrink-0 ${p.highlight ? "text-primary" : "text-muted-foreground"}`} />
+                    <span>{perk}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                onClick={() => buy(p.key)}
+                disabled={busy !== null}
+                variant={p.highlight ? "discord" : "outline"}
+                className="w-full h-12 font-black uppercase tracking-wider"
+              >
+                {busy === p.key ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                Gerar PIX
+              </Button>
+            </div>
+          );
+        })}
       </div>
 
       {/* GARANTIA */}
@@ -229,11 +297,11 @@ const Credits = () => {
 
       {/* DIALOG PIX — REDESIGN MOBILE-FIRST */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md p-0 gap-0 overflow-hidden border-2 border-primary/40 bg-card">
+        <DialogContent className="w-[calc(100vw-1.5rem)] max-w-md max-h-[92svh] overflow-y-auto p-0 gap-0 border border-primary/40 bg-card rounded-lg">
           {/* Botão fechar */}
           <button
             onClick={() => setOpen(false)}
-            className="absolute right-3 top-3 z-20 h-8 w-8 rounded-full bg-background/80 backdrop-blur grid place-items-center hover:bg-background transition"
+            className="absolute right-3 top-3 z-20 h-8 w-8 rounded-full bg-background/90 grid place-items-center hover:bg-background transition"
             aria-label="Fechar"
           >
             <X className="h-4 w-4" />
@@ -241,11 +309,10 @@ const Credits = () => {
 
           {!paid && pix && (
             <div className="flex flex-col">
-              {/* HEADER GRADIENTE */}
-              <div className="relative bg-gradient-to-br from-primary via-primary to-primary/70 p-5 pb-8 text-primary-foreground overflow-hidden">
-                <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-                <div className="relative">
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/20 text-[10px] uppercase tracking-widest font-black mb-2">
+              {/* HEADER */}
+              <div className="bg-primary p-5 pb-8 text-primary-foreground">
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary-foreground/20 text-[10px] uppercase tracking-widest font-black mb-2">
                     <QrCode className="h-3 w-3" /> Pague com PIX
                   </div>
                   <div className="flex items-end justify-between gap-3">
@@ -261,23 +328,31 @@ const Credits = () => {
                 </div>
               </div>
 
-              {/* QR CODE — flutuando sobre o header */}
+              {/* QR CODE — gerado localmente para não sumir */}
               <div className="px-5 -mt-5 relative z-10">
                 <div className="rounded-2xl bg-white p-3 shadow-xl mx-auto w-fit">
                   {pix.qr ? (
                     <img src={`data:image/png;base64,${pix.qr}`} alt="QR Code PIX" className="h-48 w-48 block" />
+                  ) : pix.qrDataUrl ? (
+                    <img src={pix.qrDataUrl} alt="QR Code PIX" className="h-48 w-48 block" />
                   ) : (
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(pix.code)}`}
-                      alt="QR Code PIX"
-                      className="h-48 w-48 block"
-                    />
+                    <div className="h-48 w-48 grid place-items-center text-background">
+                      <Loader2 className="h-7 w-7 animate-spin" />
+                    </div>
                   )}
                 </div>
                 <p className="text-center text-xs text-muted-foreground mt-3 px-4">
                   Aponte a câmera do app do seu banco para o QR acima
                 </p>
               </div>
+
+              {paymentNotice && (
+                <div className="px-5 mt-3">
+                  <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs font-semibold text-warning">
+                    {paymentNotice}
+                  </div>
+                </div>
+              )}
 
               {/* DIVISOR "OU" */}
               <div className="flex items-center gap-3 px-5 my-4">
@@ -304,6 +379,17 @@ const Credits = () => {
                     <><Copy className="h-4 w-4 mr-1" /> Copiar código PIX</>
                   )}
                 </Button>
+                {paymentNotice?.includes("inativo") && (
+                  <Button
+                    onClick={() => buy(pix.planKey)}
+                    disabled={busy !== null}
+                    variant="outline"
+                    className="w-full h-11 mt-2 font-black uppercase tracking-wider"
+                  >
+                    {busy === pix.planKey ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
+                    Gerar novo PIX
+                  </Button>
+                )}
               </div>
 
               {/* STATUS DE PAGAMENTO */}
