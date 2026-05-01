@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Users, Server, MessageCircle, DollarSign, Send, Activity, Bot,
-  Loader2, ShieldCheck, TrendingUp, Megaphone, Zap, Crown,
+  Loader2, ShieldCheck, TrendingUp, Megaphone, Zap, Crown, KeyRound,
+  CheckCircle2, XCircle, Save, Eye, EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -43,6 +44,36 @@ const Admin = () => {
   const [btnUrl, setBtnUrl] = useState("");
   const [sending, setSending] = useState(false);
   const [loadingGuilds, setLoadingGuilds] = useState(false);
+
+  // Bot token mgmt
+  const [tokenInfo, setTokenInfo] = useState<{ has_token: boolean; masked: string; source: string; updated_at: string | null; valid: boolean | null; bot: { username?: string; id?: string } | null } | null>(null);
+  const [tokenInput, setTokenInput] = useState("");
+  const [showToken, setShowToken] = useState(false);
+  const [savingToken, setSavingToken] = useState(false);
+  const [loadingToken, setLoadingToken] = useState(false);
+
+  const loadToken = async () => {
+    setLoadingToken(true);
+    const { data } = await supabase.functions.invoke("admin-bot-token", { body: { action: "get" } });
+    setLoadingToken(false);
+    if (data?.success) setTokenInfo(data);
+  };
+
+  const saveToken = async () => {
+    if (!tokenInput.trim() || tokenInput.trim().length < 30) return toast.error("Token inválido (curto demais)");
+    setSavingToken(true);
+    const { data, error } = await supabase.functions.invoke("admin-bot-token", { body: { action: "set", token: tokenInput.trim() } });
+    setSavingToken(false);
+    if (error || !data?.success) {
+      const detail = data?.detail || data?.error || error?.message || "erro";
+      return toast.error("Falha: " + detail);
+    }
+    toast.success(`Token salvo! Bot: ${data.bot?.username ?? "ok"}`);
+    setTokenInput("");
+    setShowToken(false);
+    loadToken();
+    loadGuilds(); // reload guilds with new token
+  };
 
   const loadStats = async () => {
     setLoadingStats(true);
@@ -96,7 +127,7 @@ const Admin = () => {
     setMsgContent(""); setEmbedTitle(""); setEmbedDesc(""); setEmbedImage(""); setBtnLabel(""); setBtnUrl("");
   };
 
-  useEffect(() => { if (isAdmin) { loadStats(); loadGuilds(); } }, [isAdmin]);
+  useEffect(() => { if (isAdmin) { loadStats(); loadGuilds(); loadToken(); } }, [isAdmin]);
 
   if (loading) return <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>;
   if (!isAdmin) return <Navigate to={`/admin-login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
@@ -150,6 +181,83 @@ const Admin = () => {
             </div>
           );
         })}
+      </div>
+
+      {/* BOT TOKEN MANAGEMENT */}
+      <div className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-card via-card to-primary/5 p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="h-9 w-9 rounded-lg bg-primary/20 grid place-items-center"><KeyRound className="h-4 w-4 text-primary" /></div>
+          <div className="flex-1">
+            <h2 className="font-black uppercase tracking-wider text-sm">Token do bot Discord</h2>
+            <p className="text-[11px] text-muted-foreground">Troque o token sempre que resetar — sem precisar pedir ao suporte</p>
+          </div>
+          <Button onClick={loadToken} variant="ghost" size="sm" disabled={loadingToken}>
+            {loadingToken ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+          </Button>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          {/* status */}
+          <div className="rounded-xl border border-border bg-background/40 p-4 space-y-2">
+            <div className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Status atual</div>
+            {!tokenInfo ? (
+              <div className="text-xs text-muted-foreground">Carregando...</div>
+            ) : !tokenInfo.has_token ? (
+              <div className="flex items-center gap-2 text-warning text-sm font-bold">
+                <XCircle className="h-4 w-4" /> Nenhum token configurado
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 text-sm font-bold">
+                  {tokenInfo.valid === true ? (
+                    <><CheckCircle2 className="h-4 w-4 text-success" /> <span className="text-success">Ativo</span></>
+                  ) : tokenInfo.valid === false ? (
+                    <><XCircle className="h-4 w-4 text-destructive" /> <span className="text-destructive">Token inválido / expirado</span></>
+                  ) : (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Verificando...</>
+                  )}
+                </div>
+                {tokenInfo.bot?.username && (
+                  <div className="text-xs"><span className="text-muted-foreground">Bot:</span> <b>{tokenInfo.bot.username}</b></div>
+                )}
+                <div className="text-[11px] font-mono text-muted-foreground">{tokenInfo.masked}</div>
+                <div className="text-[10px] text-muted-foreground">
+                  Origem: <b className="uppercase">{tokenInfo.source}</b>
+                  {tokenInfo.updated_at && <> · Atualizado {new Date(tokenInfo.updated_at).toLocaleString("pt-BR")}</>}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* form */}
+          <div className="rounded-xl border border-border bg-background/40 p-4 space-y-3">
+            <div className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Trocar token</div>
+            <div className="relative">
+              <Input
+                type={showToken ? "text" : "password"}
+                value={tokenInput}
+                onChange={(e) => setTokenInput(e.target.value)}
+                placeholder="Cole aqui o novo token do bot"
+                className="pr-10 font-mono text-xs"
+                autoComplete="off"
+              />
+              <button
+                type="button"
+                onClick={() => setShowToken((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                tabIndex={-1}
+              >
+                {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <Button onClick={saveToken} disabled={savingToken || !tokenInput.trim()} variant="discord" className="w-full font-black">
+              {savingToken ? <><Loader2 className="h-4 w-4 animate-spin" /> Validando...</> : <><Save className="h-4 w-4" /> Salvar e validar</>}
+            </Button>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              O token é validado direto na API do Discord antes de salvar. Se for válido, todas as funções do bot passam a usar imediatamente.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-5">

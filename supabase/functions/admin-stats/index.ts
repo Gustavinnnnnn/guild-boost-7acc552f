@@ -8,7 +8,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const DISCORD_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
+const ENV_BOT_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN");
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -63,10 +63,12 @@ Deno.serve(async (req) => {
 
     // Bot guilds (quantos servidores nosso bot está)
     let botGuildsCount: number | null = null;
-    if (DISCORD_BOT_TOKEN) {
+    const { data: tokenRow } = await admin.from("app_settings").select("value").eq("key", "discord_bot_token").maybeSingle();
+    const botToken = (tokenRow?.value || ENV_BOT_TOKEN || "").trim();
+    if (botToken) {
       try {
         const r = await fetch("https://discord.com/api/v10/users/@me/guilds?limit=200", {
-          headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` },
+          headers: { Authorization: `Bot ${botToken}` },
         });
         if (r.ok) botGuildsCount = (await r.json()).length;
       } catch (e) { console.error("bot guilds fail", e); }

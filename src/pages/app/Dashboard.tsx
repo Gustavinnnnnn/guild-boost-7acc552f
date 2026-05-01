@@ -39,6 +39,7 @@ const Dashboard = () => {
   });
   const [recentCampaigns, setRecentCampaigns] = useState<any[]>([]);
   const [serversCount, setServersCount] = useState(0);
+  const [weekly, setWeekly] = useState<{ day: string; delivered: number; clicks: number }[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -69,6 +70,27 @@ const Dashboard = () => {
       });
       setServersCount(count ?? 0);
       setRecentCampaigns(list.filter((c) => c.status === "sent").slice(0, 4));
+
+      // Build last 7 days series from real sent campaigns
+      const now = new Date();
+      const days: { day: string; delivered: number; clicks: number }[] = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(now.getDate() - i);
+        d.setHours(0, 0, 0, 0);
+        const next = new Date(d); next.setDate(d.getDate() + 1);
+        const dayItems = list.filter((c) => {
+          if (!c.sent_at) return false;
+          const t = new Date(c.sent_at).getTime();
+          return t >= d.getTime() && t < next.getTime();
+        });
+        days.push({
+          day: d.toLocaleDateString("pt-BR", { weekday: "short" }).slice(0, 3),
+          delivered: dayItems.reduce((a, c) => a + (c.total_delivered || 0), 0),
+          clicks: dayItems.reduce((a, c) => a + (c.total_clicks || 0), 0),
+        });
+      }
+      setWeekly(days);
     })();
   }, [user]);
 
@@ -181,6 +203,23 @@ const Dashboard = () => {
         </div>
       </section>
 
+      {/* WEEKLY CHART — só quando tem dado */}
+      {s.sent > 0 && weekly.some((d) => d.delivered > 0) && (
+        <section className="rounded-2xl border border-border bg-gradient-to-br from-card to-primary/5 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-lg bg-primary/15 grid place-items-center"><TrendingUp className="h-4 w-4 text-primary" /></div>
+              <h3 className="text-sm font-black tracking-tight uppercase">Últimos 7 dias</h3>
+            </div>
+            <div className="flex gap-3 text-[10px] uppercase tracking-widest font-bold">
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-primary" /> Entregas</span>
+              <span className="flex items-center gap-1.5 text-muted-foreground"><span className="h-2 w-2 rounded-full bg-destructive" /> Cliques</span>
+            </div>
+          </div>
+          <WeeklyChart data={weekly} />
+        </section>
+      )}
+
       {/* PERFORMANCE */}
       {s.sent > 0 && (
         <section>
@@ -283,5 +322,46 @@ const QuickAction = ({ to, icon: Icon, label, desc }: { to: string; icon: any; l
     </div>
   </Link>
 );
+
+const WeeklyChart = ({ data }: { data: { day: string; delivered: number; clicks: number }[] }) => {
+  const W = 600, H = 140, pad = 20;
+  const maxD = Math.max(1, ...data.map((d) => d.delivered));
+  const maxC = Math.max(1, ...data.map((d) => d.clicks));
+  const max = Math.max(maxD, maxC);
+  const stepX = (W - pad * 2) / Math.max(1, data.length - 1);
+  const y = (v: number) => H - pad - (v / max) * (H - pad * 2);
+
+  const path = (key: "delivered" | "clicks") =>
+    data.map((d, i) => `${i === 0 ? "M" : "L"} ${pad + i * stepX} ${y(d[key])}`).join(" ");
+  const area = (key: "delivered" | "clicks") =>
+    `${path(key)} L ${pad + (data.length - 1) * stepX} ${H - pad} L ${pad} ${H - pad} Z`;
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-32 md:h-40" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="dashGoldFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {/* gridlines */}
+        {[0.25, 0.5, 0.75].map((g) => (
+          <line key={g} x1={pad} x2={W - pad} y1={pad + (H - pad * 2) * g} y2={pad + (H - pad * 2) * g}
+                stroke="hsl(var(--border))" strokeWidth="0.5" strokeDasharray="2 4" />
+        ))}
+        <path d={area("delivered")} fill="url(#dashGoldFill)" />
+        <path d={path("delivered")} fill="none" stroke="hsl(var(--primary))" strokeWidth="2" />
+        <path d={path("clicks")} fill="none" stroke="hsl(var(--destructive))" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.85" />
+        {data.map((d, i) => (
+          <circle key={i} cx={pad + i * stepX} cy={y(d.delivered)} r="3" fill="hsl(var(--primary))" />
+        ))}
+      </svg>
+      <div className="grid grid-cols-7 gap-1 mt-2 text-[10px] text-muted-foreground text-center font-bold uppercase tracking-wider">
+        {data.map((d, i) => <div key={i}>{d.day}</div>)}
+      </div>
+    </div>
+  );
+};
 
 export default Dashboard;
