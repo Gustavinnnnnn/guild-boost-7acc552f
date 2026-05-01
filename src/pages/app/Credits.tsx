@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 type PlanKey = "basico" | "pro" | "elite";
-type PixState = { code: string; ref: string; qr?: string; qrDataUrl?: string; coins: number; price: string; planName: string; expiresAt?: string | null };
+type PixState = { code: string; ref: string; qr?: string; qrDataUrl?: string; coins: number; price: string; planName: string; planKey: PlanKey; expiresAt?: string | null };
 
 const PLANS: { key: PlanKey; name: string; price: string; dms: number; tagline: string; angle: string; badge: string; perks: string[]; highlight?: boolean }[] = [
   {
@@ -113,6 +113,7 @@ const Credits = () => {
         coins: data.coins || planMeta.dms,
         price: planMeta.price,
         planName: planMeta.name,
+        planKey,
         expiresAt: data.expires_at,
       });
       setPaid(false);
@@ -171,7 +172,7 @@ const Credits = () => {
           window.dispatchEvent(new Event("profile:refresh"));
           toast.success(`Pagamento confirmado! +${pix.coins} DMs no saldo 🎉`);
         } else if (!cancelled && ["expired", "cancelled", "canceled", "failed"].includes(data?.status || "")) {
-          setPaymentNotice("Esse PIX ficou inativo. Feche e gere outro pagamento para receber um QR novo.");
+          setPaymentNotice("Esse PIX ficou inativo. Gere outro pagamento para receber um QR novo.");
         }
       } catch {
         if (!cancelled) setPaymentNotice("Não consegui verificar agora, mas o QR e o copia e cola continuam na tela para pagamento.");
