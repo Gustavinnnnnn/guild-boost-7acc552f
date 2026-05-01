@@ -203,6 +203,23 @@ const Dashboard = () => {
         </div>
       </section>
 
+      {/* WEEKLY CHART — só quando tem dado */}
+      {s.sent > 0 && weekly.some((d) => d.delivered > 0) && (
+        <section className="rounded-2xl border border-border bg-gradient-to-br from-card to-primary/5 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-lg bg-primary/15 grid place-items-center"><TrendingUp className="h-4 w-4 text-primary" /></div>
+              <h3 className="text-sm font-black tracking-tight uppercase">Últimos 7 dias</h3>
+            </div>
+            <div className="flex gap-3 text-[10px] uppercase tracking-widest font-bold">
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-primary" /> Entregas</span>
+              <span className="flex items-center gap-1.5 text-muted-foreground"><span className="h-2 w-2 rounded-full bg-destructive" /> Cliques</span>
+            </div>
+          </div>
+          <WeeklyChart data={weekly} />
+        </section>
+      )}
+
       {/* PERFORMANCE */}
       {s.sent > 0 && (
         <section>
