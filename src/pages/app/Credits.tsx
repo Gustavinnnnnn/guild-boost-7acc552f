@@ -312,7 +312,7 @@ const Credits = () => {
               {/* HEADER */}
               <div className="bg-primary p-5 pb-8 text-primary-foreground">
                 <div>
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary-foreground/18 text-[10px] uppercase tracking-widest font-black mb-2">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary-foreground/20 text-[10px] uppercase tracking-widest font-black mb-2">
                     <QrCode className="h-3 w-3" /> Pague com PIX
                   </div>
                   <div className="flex items-end justify-between gap-3">
