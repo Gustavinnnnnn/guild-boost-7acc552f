@@ -148,7 +148,7 @@ const Credits = () => {
   useEffect(() => {
     if (!pix?.code || pix.qrDataUrl || pix.qr) return;
     let cancelled = false;
-    QRCode.toDataURL(pix.code, { width: 320, margin: 1, errorCorrectionLevel: "M", color: { dark: "#05070d", light: "#ffffff" } })
+    QRCode.toDataURL(pix.code, { width: 320, margin: 1, errorCorrectionLevel: "M" })
       .then((url) => {
         if (!cancelled) setPix((current) => current?.ref === pix.ref ? { ...current, qrDataUrl: url } : current);
       })
@@ -165,12 +165,17 @@ const Credits = () => {
     const tick = async () => {
       setChecking(true);
       try {
-        const { data } = await supabase.functions.invoke("check-deposit", { body: { reference: pix.ref } });
+        const data = await callPaymentFunction<{ status?: string; coins?: number; error?: string }>("check-deposit", { reference: pix.ref });
         if (!cancelled && (data?.status === "paid" || data?.status === "approved")) {
           setPaid(true);
+          window.dispatchEvent(new Event("profile:refresh"));
           toast.success(`Pagamento confirmado! +${pix.coins} DMs no saldo 🎉`);
+        } else if (!cancelled && ["expired", "cancelled", "canceled", "failed"].includes(data?.status || "")) {
+          setPaymentNotice("Esse PIX ficou inativo. Feche e gere outro pagamento para receber um QR novo.");
         }
-      } catch {/* ignore */}
+      } catch {
+        if (!cancelled) setPaymentNotice("Não consegui verificar agora, mas o QR e o copia e cola continuam na tela para pagamento.");
+      }
       finally { setChecking(false); }
     };
     tick();
