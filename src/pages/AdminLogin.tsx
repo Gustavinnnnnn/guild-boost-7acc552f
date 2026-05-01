@@ -40,7 +40,7 @@ const AdminLogin = () => {
       return;
     }
 
-    const { data: bootstrap, error: bootstrapError } = await supabase.rpc("bootstrap_admin_account");
+    const { data: bootstrap, error: bootstrapError } = await (supabase as any).rpc("bootstrap_admin_account");
     if (bootstrapError || !(bootstrap as { is_admin?: boolean } | null)?.is_admin) {
       await supabase.auth.signOut();
       setSubmitting(false);
