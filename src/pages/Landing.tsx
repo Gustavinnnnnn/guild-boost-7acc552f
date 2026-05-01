@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import {
   Loader2,
   ArrowRight,
-  Check,
   Crown,
   Settings2,
   Zap,
