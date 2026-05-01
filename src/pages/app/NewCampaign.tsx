@@ -11,9 +11,21 @@ import { Slider } from "@/components/ui/slider";
 import {
   ImageIcon, Loader2, Send, Save, X, Users, Coins, ExternalLink, Target,
   Check, FlaskConical, Wand2, ChevronLeft, ChevronRight, Eye, Upload, Search,
+  Server, ShieldCheck, Radar, Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CATEGORY_GROUPS, dmsToCoins, coinsToDms, findNiche, findGroupOfNiche, formatCoins } from "@/lib/ads";
+
+type RivalServer = {
+  id: string;
+  name: string;
+  icon_url: string | null;
+  banner_url?: string | null;
+  description: string | null;
+  approximate_member_count: number;
+  approximate_presence_count: number;
+  invite_code: string;
+};
 
 const COLORS = ["#5865F2", "#57F287", "#FEE75C", "#EB459E", "#ED4245", "#9B59B6", "#F47B67", "#00D9FF"];
 
