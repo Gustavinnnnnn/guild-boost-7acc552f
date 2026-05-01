@@ -253,6 +253,74 @@ export type Database = {
         }
         Relationships: []
       }
+      bot_broadcasts: {
+        Row: {
+          button_label: string | null
+          button_url: string | null
+          created_at: string
+          embed_color: string | null
+          finished_at: string | null
+          guild_id: string
+          id: string
+          image_url: string | null
+          message: string
+          status: string
+          title: string | null
+          total_clicks: number
+          total_delivered: number
+          total_failed: number
+          total_targeted: number
+          user_bot_id: string
+          user_id: string
+        }
+        Insert: {
+          button_label?: string | null
+          button_url?: string | null
+          created_at?: string
+          embed_color?: string | null
+          finished_at?: string | null
+          guild_id: string
+          id?: string
+          image_url?: string | null
+          message: string
+          status?: string
+          title?: string | null
+          total_clicks?: number
+          total_delivered?: number
+          total_failed?: number
+          total_targeted?: number
+          user_bot_id: string
+          user_id: string
+        }
+        Update: {
+          button_label?: string | null
+          button_url?: string | null
+          created_at?: string
+          embed_color?: string | null
+          finished_at?: string | null
+          guild_id?: string
+          id?: string
+          image_url?: string | null
+          message?: string
+          status?: string
+          title?: string | null
+          total_clicks?: number
+          total_delivered?: number
+          total_failed?: number
+          total_targeted?: number
+          user_bot_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_broadcasts_user_bot_id_fkey"
+            columns: ["user_bot_id"]
+            isOneToOne: false
+            referencedRelation: "user_bots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_deliveries: {
         Row: {
           campaign_id: string
@@ -563,6 +631,108 @@ export type Database = {
           id?: string
           updated_at?: string
           username?: string
+        }
+        Relationships: []
+      }
+      user_bot_payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          expires_at: string | null
+          id: string
+          paid_at: string | null
+          paradise_transaction_id: string | null
+          qr_code: string | null
+          qr_code_base64: string | null
+          reference: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          paid_at?: string | null
+          paradise_transaction_id?: string | null
+          qr_code?: string | null
+          qr_code_base64?: string | null
+          reference: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          paid_at?: string | null
+          paradise_transaction_id?: string | null
+          qr_code?: string | null
+          qr_code_base64?: string | null
+          reference?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_bots: {
+        Row: {
+          access_paid: boolean
+          access_paid_at: string | null
+          bot_avatar_url: string | null
+          bot_id: string | null
+          bot_token: string | null
+          bot_username: string | null
+          created_at: string
+          guild_id: string | null
+          guild_member_count: number | null
+          guild_name: string | null
+          id: string
+          total_broadcasts: number
+          total_clicks: number
+          total_dms_failed: number
+          total_dms_sent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_paid?: boolean
+          access_paid_at?: string | null
+          bot_avatar_url?: string | null
+          bot_id?: string | null
+          bot_token?: string | null
+          bot_username?: string | null
+          created_at?: string
+          guild_id?: string | null
+          guild_member_count?: number | null
+          guild_name?: string | null
+          id?: string
+          total_broadcasts?: number
+          total_clicks?: number
+          total_dms_failed?: number
+          total_dms_sent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_paid?: boolean
+          access_paid_at?: string | null
+          bot_avatar_url?: string | null
+          bot_id?: string | null
+          bot_token?: string | null
+          bot_username?: string | null
+          created_at?: string
+          guild_id?: string | null
+          guild_member_count?: number | null
+          guild_name?: string | null
+          id?: string
+          total_broadcasts?: number
+          total_clicks?: number
+          total_dms_failed?: number
+          total_dms_sent?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

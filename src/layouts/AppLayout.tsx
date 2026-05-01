@@ -13,6 +13,7 @@ const baseNav = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/app/campanhas", label: "Campanhas", icon: Megaphone, end: false },
   { to: "/app/creditos", label: "DMs", icon: MessageCircle, end: false },
+  { to: "/app/meu-bot", label: "Meu Bot", icon: Bot, end: false },
 ];
 
 const AppLayout = () => {
