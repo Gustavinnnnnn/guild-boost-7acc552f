@@ -44,6 +44,12 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
+        gold: {
+          DEFAULT: "#FFD700",
+          dark: "#D4AF37",
+          light: "#FFE875",
+        },
+        "red-glow": "#FF2A2A",
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
