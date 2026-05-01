@@ -83,6 +83,12 @@ const NewCampaign = () => {
       setButtonUrl(data.button_url || "");
       setSelectedNiches((data as any).target_niches || []);
       setTargetCount(data.target_count || 500);
+      const ts = (data as any).target_server;
+      if (ts && ts.id) {
+        setRivalServer(ts);
+        setRivalConfirmed(true);
+        setTargetMode("server");
+      }
       setLoadingEdit(false);
     })();
   }, [editId, isEdit, user]);
