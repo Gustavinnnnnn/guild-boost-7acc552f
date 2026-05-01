@@ -84,21 +84,22 @@ const Landing = () => {
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* LEFT — TEXT */}
             <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-destructive/40 bg-destructive/10 text-destructive text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] mb-6">
                 <Sparkles className="h-3.5 w-3.5" />
-                Crescimento automatizado para Discord
+                Cansado do servidor vazio?
               </div>
 
               <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-black leading-[0.95] tracking-tight mb-6">
-                LEVE SEU SERVIDOR PARA{" "}
+                SEU SERVIDOR ESTÁ{" "}
+                <span className="text-destructive">MORRENDO</span>{" "}
+                ENQUANTO OS OUTROS{" "}
                 <span className="bg-gradient-primary bg-clip-text text-transparent">
-                  MILHARES
-                </span>{" "}
-                DE PESSOAS NOVAS
+                  EXPLODEM
+                </span>
               </h1>
 
               <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
-                Divulgação automatizada por DM no Discord — direto pra usuários reais, sem esforço manual e com métricas em tempo real.
+                Você posta em grupo, paga divulgação, chama amigo… e nada. <span className="text-foreground font-semibold">Chega.</span> Conecte seu Discord agora e comece a receber membros reais hoje — no automático, enquanto você dorme.
               </p>
 
               <div className="flex flex-col items-center lg:items-start gap-2">
@@ -108,10 +109,10 @@ const Landing = () => {
                   className="group inline-flex items-center gap-3 px-8 md:px-10 h-14 md:h-16 rounded-xl bg-gradient-primary text-primary-foreground font-black text-base md:text-lg uppercase tracking-wider shadow-glow hover:shadow-[0_0_70px_hsl(var(--primary)/0.6)] transition-all hover:scale-[1.03] disabled:opacity-50"
                 >
                   {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <DiscordIcon className="h-5 w-5 md:h-6 md:w-6" />}
-                  Entrar com Discord
+                  Quero parar de perder tempo
                   <ArrowRight className="h-5 w-5 md:h-6 md:w-6 group-hover:translate-x-1 transition-transform" />
                 </button>
-                <p className="text-xs text-muted-foreground mt-1">Acesse o painel e comece em segundos</p>
+                <p className="text-xs text-muted-foreground mt-1">Liberação imediata • Sem cartão • Comece grátis</p>
               </div>
             </div>
 
@@ -184,12 +185,12 @@ const Landing = () => {
       <section className="relative py-20 md:py-28 border-y border-border bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.06),transparent_70%)]">
         <div className="container mx-auto px-4 text-center max-w-3xl">
           <p className="text-2xl md:text-4xl font-display font-bold leading-tight text-foreground/80">
-            Enquanto alguns servidores ficam parados…
+            Você se mata pra divulgar.
             <br />
-            outros estão sempre com gente entrando.
+            Seu concorrente aperta <span className="text-foreground">um botão</span> e enche o servidor.
           </p>
           <p className="mt-8 text-2xl md:text-4xl font-display font-black text-primary drop-shadow-[0_0_30px_hsl(var(--primary)/0.4)]">
-            A diferença está no sistema que usam.
+            A diferença não é sorte. É ferramenta.
           </p>
         </div>
       </section>
@@ -199,14 +200,14 @@ const Landing = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-14">
             <div className="text-xs uppercase tracking-[0.3em] text-primary font-bold mb-3">Como funciona</div>
-            <h2 className="font-display text-3xl md:text-5xl font-black">3 passos. Zero esforço.</h2>
+            <h2 className="font-display text-3xl md:text-5xl font-black">Em 3 minutos seu servidor já tá bombando</h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
             {[
-              { icon: Settings2, title: "Configure", desc: "Escolha o alcance e o público da campanha" },
-              { icon: Zap, title: "Ative", desc: "Seu servidor começa a ser distribuído automaticamente" },
-              { icon: TrendingUp, title: "Cresça", desc: "Novos membros chegam todos os dias" },
+              { icon: Settings2, title: "Conecte", desc: "Login com Discord em 1 clique. Sem instalar nada." },
+              { icon: Zap, title: "Dispare", desc: "Nosso sistema envia DMs pra milhares de usuários reais por você." },
+              { icon: TrendingUp, title: "Lucre", desc: "Membro novo entrando todo dia. Sem mexer em nada." },
             ].map((s, i) => (
               <div
                 key={s.title}
@@ -232,15 +233,15 @@ const Landing = () => {
           <div className="text-center mb-14">
             <div className="text-xs uppercase tracking-[0.3em] text-primary font-bold mb-3">Painel</div>
             <h2 className="font-display text-3xl md:text-5xl font-black">
-              Controle total em <span className="text-primary">um único painel</span>
+              Tudo na palma da sua mão. <span className="text-primary">Sem complicação.</span>
             </h2>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
             {[
-              { icon: BarChart3, title: "Dashboard", desc: "Métricas em tempo real do seu crescimento" },
-              { icon: Target, title: "Criar campanha", desc: "Defina o alcance e o público em segundos" },
-              { icon: Sparkles, title: "Comprar alcance", desc: "PIX rápido. Créditos liberados na hora." },
+              { icon: BarChart3, title: "Veja crescer ao vivo", desc: "Acompanhe cada novo membro entrando em tempo real." },
+              { icon: Target, title: "Dispare em segundos", desc: "Monte uma campanha e ataque seu público em 30 segundos." },
+              { icon: Sparkles, title: "Recarregue na hora", desc: "PIX aprovado e DMs liberadas instantaneamente." },
             ].map((p) => (
               <div
                 key={p.title}
@@ -264,9 +265,9 @@ const Landing = () => {
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="grid sm:grid-cols-3 gap-5 mb-8">
             {[
-              { icon: Zap, label: "Sistema automatizado" },
-              { icon: Target, label: "Segmentação inteligente" },
-              { icon: ShieldCheck, label: "Sem divulgação manual" },
+              { icon: Zap, label: "Funciona 24h por dia, sem você" },
+              { icon: Target, label: "Atinge quem realmente entra" },
+              { icon: ShieldCheck, label: "Chega de pedir favor pra divulgar" },
             ].map((c) => (
               <div
                 key={c.label}
@@ -289,20 +290,23 @@ const Landing = () => {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-primary/[0.1] blur-[150px]" />
         </div>
         <div className="container mx-auto px-4 relative text-center">
-          <h2 className="font-display text-4xl md:text-6xl font-black leading-tight mb-10 max-w-3xl mx-auto">
-            Quem cresce primeiro,
+          <h2 className="font-display text-4xl md:text-6xl font-black leading-tight mb-6 max-w-3xl mx-auto">
+            Ou você cresce hoje,
             <br />
             <span className="bg-gradient-primary bg-clip-text text-transparent">
-              domina o jogo.
+              ou some amanhã.
             </span>
           </h2>
+          <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-10">
+            Cada dia parado é membro que entra no servidor do seu concorrente. Inverte o jogo agora.
+          </p>
           <button
             onClick={connectDiscord}
             disabled={busy}
             className="group inline-flex items-center gap-3 px-10 md:px-12 h-16 md:h-18 rounded-xl bg-gradient-primary text-primary-foreground font-black text-base md:text-lg uppercase tracking-wider shadow-glow hover:shadow-[0_0_90px_hsl(var(--primary)/0.7)] transition-all hover:scale-[1.04] disabled:opacity-50"
           >
             {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <DiscordIcon className="h-6 w-6" />}
-            Entrar com Discord
+            Conectar e dominar agora
             <ArrowRight className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
