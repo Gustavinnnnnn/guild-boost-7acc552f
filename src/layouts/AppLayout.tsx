@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Megaphone, LogOut, Plus, MessageCircle, Gift, Server, Crown } from "lucide-react";
+import { LayoutDashboard, Megaphone, LogOut, MessageCircle, Gift, Server, Crown, Bot } from "lucide-react";
 import { DiscordIcon } from "@/components/DiscordIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 
 const formatDMs = (n: number) => n.toLocaleString("pt-BR");
 
+// Compra de DMs e criação de campanhas agora são feitas pelo bot Discord.
+// O site mantém só dashboard, métricas, servidores e afiliado.
 const baseNav = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/app/campanhas", label: "Campanhas", icon: Megaphone, end: false },
@@ -51,9 +53,9 @@ const AppLayout = () => {
               {n.label}
             </NavLink>
           ))}
-          <Link to="/app/campanhas/nova" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold border border-dashed border-border text-foreground hover:border-primary hover:bg-primary/5 transition mt-3">
-            <Plus className="h-4 w-4" /> Nova campanha
-          </Link>
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold border border-dashed border-primary/40 text-primary bg-primary/5 mt-3">
+            <Bot className="h-4 w-4" /> Use o bot Discord para comprar e divulgar
+          </div>
         </nav>
 
         <div className="p-3 border-t border-border space-y-2">
