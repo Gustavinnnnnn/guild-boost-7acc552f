@@ -45,6 +45,36 @@ const Admin = () => {
   const [sending, setSending] = useState(false);
   const [loadingGuilds, setLoadingGuilds] = useState(false);
 
+  // Bot token mgmt
+  const [tokenInfo, setTokenInfo] = useState<{ has_token: boolean; masked: string; source: string; updated_at: string | null; valid: boolean | null; bot: { username?: string; id?: string } | null } | null>(null);
+  const [tokenInput, setTokenInput] = useState("");
+  const [showToken, setShowToken] = useState(false);
+  const [savingToken, setSavingToken] = useState(false);
+  const [loadingToken, setLoadingToken] = useState(false);
+
+  const loadToken = async () => {
+    setLoadingToken(true);
+    const { data } = await supabase.functions.invoke("admin-bot-token", { body: { action: "get" } });
+    setLoadingToken(false);
+    if (data?.success) setTokenInfo(data);
+  };
+
+  const saveToken = async () => {
+    if (!tokenInput.trim() || tokenInput.trim().length < 30) return toast.error("Token inválido (curto demais)");
+    setSavingToken(true);
+    const { data, error } = await supabase.functions.invoke("admin-bot-token", { body: { action: "set", token: tokenInput.trim() } });
+    setSavingToken(false);
+    if (error || !data?.success) {
+      const detail = data?.detail || data?.error || error?.message || "erro";
+      return toast.error("Falha: " + detail);
+    }
+    toast.success(`Token salvo! Bot: ${data.bot?.username ?? "ok"}`);
+    setTokenInput("");
+    setShowToken(false);
+    loadToken();
+    loadGuilds(); // reload guilds with new token
+  };
+
   const loadStats = async () => {
     setLoadingStats(true);
     const { data, error } = await supabase.functions.invoke("admin-stats");
