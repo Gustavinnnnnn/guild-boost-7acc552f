@@ -22,30 +22,6 @@ import {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-const plans = [
-  {
-    name: "START",
-    price: "9,90",
-    tagline: "Entrada rápida",
-    features: ["Alcance inicial", "Até 100 entregas direcionadas", "Painel completo"],
-    highlight: false,
-  },
-  {
-    name: "PRO",
-    price: "29,90",
-    tagline: "Mais escolhido",
-    features: ["Maior exposição", "Até 350 entregas direcionadas", "Prioridade na fila"],
-    highlight: true,
-  },
-  {
-    name: "ELITE",
-    price: "79,90",
-    tagline: "Escala máxima",
-    features: ["Alto alcance", "Até 1000 entregas direcionadas", "Suporte prioritário"],
-    highlight: false,
-  },
-];
-
 const Landing = () => {
   const navigate = useNavigate();
   const [clientId, setClientId] = useState<string>("");
@@ -291,65 +267,6 @@ const Landing = () => {
                   <h3 className="font-display text-lg font-black">{p.title}</h3>
                 </div>
                 <p className="text-white/55 text-sm">{p.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 5 — PLANOS */}
-      <section className="py-20 md:py-28">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-14">
-            <div className="text-xs uppercase tracking-[0.3em] text-gold font-bold mb-3">Planos</div>
-            <h2 className="font-display text-3xl md:text-5xl font-black">Escolha sua escala</h2>
-            <p className="text-white/55 mt-3 text-sm md:text-base">Pague uma vez. Use quando quiser.</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
-            {plans.map((p) => (
-              <div
-                key={p.name}
-                className={`relative rounded-2xl p-6 md:p-7 transition-all ${
-                  p.highlight
-                    ? "border-2 border-gold bg-gradient-to-br from-gold/10 via-[#141414] to-[#0A0A0A] shadow-[0_0_50px_rgba(255,215,0,0.25)] md:scale-105"
-                    : "border border-white/10 bg-gradient-to-br from-[#141414] to-[#0A0A0A] hover:border-gold/30"
-                }`}
-              >
-                {p.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gold text-black text-[10px] font-black uppercase tracking-wider shadow-[0_0_20px_rgba(255,215,0,0.6)]">
-                    ⭐ {p.tagline}
-                  </div>
-                )}
-                <div className="text-center mb-5">
-                  <div className="font-display text-2xl font-black tracking-tight mb-1">{p.name}</div>
-                  {!p.highlight && <div className="text-xs uppercase tracking-wider text-white/40">{p.tagline}</div>}
-                </div>
-                <div className="text-center mb-6">
-                  <span className="text-sm text-white/50 align-top">R$</span>
-                  <span className={`font-display text-5xl font-black ${p.highlight ? "text-gold" : "text-white"}`}>
-                    {p.price}
-                  </span>
-                </div>
-                <ul className="space-y-3 mb-7">
-                  {p.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2.5 text-sm text-white/75">
-                      <Check className={`h-4 w-4 mt-0.5 shrink-0 ${p.highlight ? "text-gold" : "text-white/50"}`} />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={connectDiscord}
-                  disabled={busy}
-                  className={`w-full h-12 rounded-xl font-black text-sm uppercase tracking-wider transition-all disabled:opacity-50 ${
-                    p.highlight
-                      ? "bg-gradient-to-r from-gold via-yellow-200 to-gold-dark text-black shadow-[0_0_30px_rgba(255,215,0,0.45)] hover:shadow-[0_0_50px_rgba(255,215,0,0.7)]"
-                      : "bg-white/5 text-white border border-white/15 hover:bg-gold hover:text-black hover:border-gold"
-                  }`}
-                >
-                  Começar
-                </button>
               </div>
             ))}
           </div>
