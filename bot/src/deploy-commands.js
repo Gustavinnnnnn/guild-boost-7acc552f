@@ -1,7 +1,7 @@
 // Registra os slash commands no Discord.
-// Rode este script UMA VEZ depois de criar/alterar comandos:
-//   node src/deploy-commands.js
-import 'dotenv/config';
+// Rode UMA VEZ depois de criar/alterar comandos:
+//   npm run deploy-commands
+import { config } from './config.js';
 import { REST, Routes } from 'discord.js';
 import { readdir } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -17,9 +17,9 @@ for (const file of files) {
   if (mod.data) commands.push(mod.data.toJSON());
 }
 
-const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
-const clientId = process.env.DISCORD_CLIENT_ID;
-const guildId = process.env.DEV_GUILD_ID;
+const rest = new REST({ version: '10' }).setToken(config.DISCORD_TOKEN);
+const clientId = config.DISCORD_CLIENT_ID;
+const guildId = config.DEV_GUILD_ID;
 
 try {
   if (guildId) {

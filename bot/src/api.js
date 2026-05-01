@@ -1,11 +1,11 @@
 // Wrapper para chamar a API do bot (edge function bot-api).
-import 'dotenv/config';
+import { config } from './config.js';
 
-const BASE = process.env.BOT_API_URL;
-const KEY = process.env.BOT_API_KEY;
+const BASE = config.BOT_API_URL;
+const KEY = config.BOT_API_KEY;
 
-if (!BASE || !KEY) {
-  console.error('❌ BOT_API_URL ou BOT_API_KEY não configurados no .env');
+if (!BASE || !KEY || KEY.includes('COLE_')) {
+  console.error('❌ BOT_API_URL ou BOT_API_KEY não configurados no src/config.js');
   process.exit(1);
 }
 
