@@ -59,6 +59,14 @@ const NewCampaign = () => {
   const [maxReach, setMaxReach] = useState(0);
   const [loadingEdit, setLoadingEdit] = useState(isEdit);
 
+  // Modo: por nicho OU por servidor rival
+  const [targetMode, setTargetMode] = useState<"niche" | "server">("niche");
+  const [serverInput, setServerInput] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [verifyStage, setVerifyStage] = useState<string>("");
+  const [rivalServer, setRivalServer] = useState<RivalServer | null>(null);
+  const [rivalConfirmed, setRivalConfirmed] = useState(false);
+
   // Carrega campanha em modo edição
   useEffect(() => {
     if (!isEdit || !user) return;
