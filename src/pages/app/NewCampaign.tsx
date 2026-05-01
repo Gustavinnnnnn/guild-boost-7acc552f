@@ -10,12 +10,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import {
   ImageIcon, Loader2, Send, Save, X, Users, Coins, ExternalLink, Target,
-  Sparkles, ChevronDown, ChevronUp, Check, FlaskConical, Wand2,
+  Check, FlaskConical, Wand2, ChevronLeft, ChevronRight, Eye, Upload, Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CATEGORY_GROUPS, dmsToCoins, coinsToDms, findNiche, findGroupOfNiche, formatCoins } from "@/lib/ads";
 
 const COLORS = ["#5865F2", "#57F287", "#FEE75C", "#EB459E", "#ED4245", "#9B59B6", "#F47B67", "#00D9FF"];
+
+const STEPS = [
+  { id: 1, label: "Conteúdo", icon: Wand2 },
+  { id: 2, label: "Público", icon: Target },
+  { id: 3, label: "Revisar", icon: Eye },
+];
 
 const NewCampaign = () => {
   const navigate = useNavigate();
@@ -24,6 +30,7 @@ const NewCampaign = () => {
   const { user } = useAuth();
   const { profile, refresh: refreshProfile } = useProfile();
 
+  const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
@@ -35,7 +42,7 @@ const NewCampaign = () => {
   const [testing, setTesting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedNiches, setSelectedNiches] = useState<string[]>([]);
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ stores: true });
+  const [nicheSearch, setNicheSearch] = useState("");
   const [targetCount, setTargetCount] = useState(500);
   const [maxReach, setMaxReach] = useState(0);
   const [loadingEdit, setLoadingEdit] = useState(isEdit);
@@ -56,18 +63,10 @@ const NewCampaign = () => {
       setButtonUrl(data.button_url || "");
       setSelectedNiches((data as any).target_niches || []);
       setTargetCount(data.target_count || 500);
-      // Abrir grupos que contenham nichos selecionados
-      const groups: Record<string, boolean> = {};
-      ((data as any).target_niches || []).forEach((n: string) => {
-        const g = findGroupOfNiche(n);
-        if (g) groups[g.id] = true;
-      });
-      setOpenGroups((s) => ({ ...s, ...groups }));
       setLoadingEdit(false);
     })();
   }, [editId, isEdit, user]);
 
-  // Calcula alcance disponível pros nichos selecionados
   useEffect(() => {
     let q = supabase.from("discord_servers").select("member_count, niche").eq("bot_in_server", true);
     q.then(({ data }) => {
@@ -87,19 +86,19 @@ const NewCampaign = () => {
   const toggleNiche = (val: string) => {
     setSelectedNiches((s) => (s.includes(val) ? s.filter((x) => x !== val) : [...s, val]));
   };
-  const toggleGroup = (id: string) => setOpenGroups((s) => ({ ...s, [id]: !s[id] }));
-  const selectAllInGroup = (groupId: string) => {
-    const grp = CATEGORY_GROUPS.find((g) => g.id === groupId);
-    if (!grp) return;
-    const vals = grp.niches.map((n) => n.value);
-    const allIn = vals.every((v) => selectedNiches.includes(v));
-    setSelectedNiches((s) =>
-      allIn ? s.filter((x) => !vals.includes(x)) : [...new Set([...s, ...vals])]
-    );
-  };
+
+  const filteredGroups = useMemo(() => {
+    if (!nicheSearch.trim()) return CATEGORY_GROUPS;
+    const q = nicheSearch.toLowerCase();
+    return CATEGORY_GROUPS.map((g) => ({
+      ...g,
+      niches: g.niches.filter((n) => n.label.toLowerCase().includes(q) || n.description?.toLowerCase().includes(q)),
+    })).filter((g) => g.niches.length > 0);
+  }, [nicheSearch]);
 
   const uploadImage = async (file: File) => {
     if (!user) return;
+    if (file.size > 8 * 1024 * 1024) return toast.error("Imagem muito grande (máx 8MB)");
     setUploading(true);
     const ext = file.name.split(".").pop();
     const path = `${user.id}/${Date.now()}.${ext}`;
@@ -122,16 +121,31 @@ const NewCampaign = () => {
     });
     setTesting(false);
     if (error || data?.error) return toast.error("Falha: " + (data?.error || error?.message));
-    toast.success(`✅ Teste enviado pra DM de @${data.sent_to}! Confira no Discord.`);
+    toast.success(`✅ Teste enviado pra DM de @${data.sent_to}!`);
+  };
+
+  const validateStep1 = () => {
+    if (!name.trim()) { toast.error("Dê um nome interno à campanha"); return false; }
+    if (!title.trim()) { toast.error("Coloque um título"); return false; }
+    if (!message.trim()) { toast.error("Escreva a mensagem"); return false; }
+    if (buttonUrl && !validateUrl(buttonUrl)) { toast.error("URL do botão inválida"); return false; }
+    return true;
+  };
+  const validateStep2 = () => {
+    if (selectedNiches.length === 0) { toast.error("Selecione ao menos 1 nicho"); return false; }
+    return true;
+  };
+
+  const goNext = () => {
+    if (step === 1 && !validateStep1()) return;
+    if (step === 2 && !validateStep2()) return;
+    setStep((s) => Math.min(3, s + 1));
   };
 
   const save = async (action: "draft" | "send") => {
     if (!user || !profile) return;
-    if (!name.trim()) return toast.error("Dê um nome interno à campanha");
-    if (!title.trim()) return toast.error("Coloque um título");
-    if (!message.trim()) return toast.error("Escreva a mensagem");
-    if (buttonUrl && !validateUrl(buttonUrl)) return toast.error("URL do botão inválida");
-    if (action === "send" && selectedNiches.length === 0) return toast.error("Selecione ao menos 1 nicho de público");
+    if (!validateStep1()) return;
+    if (action === "send" && !validateStep2()) return;
     if (action === "send" && myCoins < cost) return toast.error(`Você precisa de ${cost} DMs, tem apenas ${myCoins}`);
 
     setBusy(true);
@@ -178,236 +192,274 @@ const NewCampaign = () => {
   }
 
   return (
-    <div className="grid lg:grid-cols-[1fr,440px] gap-6 max-w-[1400px]">
-      {/* COLUNA ESQUERDA — formulário */}
+    <div className="grid lg:grid-cols-[1fr,420px] gap-6 max-w-[1400px]">
       <div className="space-y-5">
-        {/* HEADER */}
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <h1 className="text-2xl font-black flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-primary" />
-              {isEdit ? "Editar campanha" : "Criar nova campanha"}
-            </h1>
-            <p className="text-sm text-muted-foreground">Defina seu público, escreva o anúncio e dispare.</p>
-          </div>
-        </div>
-
-        {/* PÚBLICO — multi-seleção estilo Meta Ads */}
-        <div className="rounded-2xl bg-gradient-to-br from-card to-card/50 border border-border p-5 space-y-4 shadow-card">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 font-bold">
-              <div className="h-8 w-8 rounded-lg bg-primary/15 grid place-items-center"><Target className="h-4 w-4 text-primary" /></div>
-              <div>
-                <div className="text-sm">Público-alvo</div>
-                <div className="text-[11px] text-muted-foreground font-normal">Escolha 1 ou mais nichos</div>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Selecionados</div>
-              <div className="font-black text-lg">{selectedNiches.length}</div>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            {CATEGORY_GROUPS.map((g) => {
-              const isOpen = openGroups[g.id];
-              const selectedInGroup = g.niches.filter((n) => selectedNiches.includes(n.value)).length;
-              const allSelected = selectedInGroup === g.niches.length;
+        {/* HEADER + STEPPER */}
+        <div>
+          <h1 className="text-2xl font-black mb-1">{isEdit ? "Editar campanha" : "Criar nova campanha"}</h1>
+          <p className="text-sm text-muted-foreground mb-4">Siga as 3 etapas pra disparar sua divulgação.</p>
+          <div className="flex items-center gap-2">
+            {STEPS.map((s, i) => {
+              const Icon = s.icon;
+              const active = step === s.id;
+              const done = step > s.id;
               return (
-                <div key={g.id} className={`rounded-xl border bg-gradient-to-br ${g.color} overflow-hidden transition-all`}>
-                  <button type="button" onClick={() => toggleGroup(g.id)} className="w-full flex items-center gap-3 p-3 hover:bg-white/5 transition">
-                    <span className="text-2xl">{g.emoji}</span>
-                    <div className="flex-1 text-left min-w-0">
-                      <div className="font-bold text-sm">{g.label}</div>
-                      <div className="text-[11px] text-muted-foreground truncate">{g.description}</div>
+                <div key={s.id} className="flex items-center gap-2 flex-1">
+                  <button
+                    type="button"
+                    onClick={() => (s.id < step || (s.id === 2 && validateStep1())) && setStep(s.id)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition flex-1 ${
+                      active ? "border-primary bg-primary/15 shadow-glow"
+                      : done ? "border-success/40 bg-success/5"
+                      : "border-border bg-card hover:border-border/80"
+                    }`}
+                  >
+                    <div className={`h-7 w-7 rounded-lg grid place-items-center shrink-0 ${
+                      active ? "bg-primary text-primary-foreground"
+                      : done ? "bg-success text-white"
+                      : "bg-secondary text-muted-foreground"
+                    }`}>
+                      {done ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                     </div>
-                    {selectedInGroup > 0 && (
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
-                        {selectedInGroup}/{g.niches.length}
-                      </span>
-                    )}
-                    {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    <div className="text-left min-w-0 hidden sm:block">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none">Etapa {s.id}</div>
+                      <div className="text-sm font-bold truncate">{s.label}</div>
+                    </div>
+                    <div className="text-sm font-bold sm:hidden">{s.label}</div>
                   </button>
-                  {isOpen && (
-                    <div className="p-3 pt-0 space-y-2">
-                      <button type="button" onClick={() => selectAllInGroup(g.id)}
-                        className="text-[10px] uppercase tracking-wider font-bold text-primary hover:underline">
-                        {allSelected ? "Desmarcar todos" : "Marcar todos"}
-                      </button>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                        {g.niches.map((n) => {
-                          const sel = selectedNiches.includes(n.value);
-                          return (
-                            <button key={n.value} type="button" onClick={() => toggleNiche(n.value)}
-                              className={`relative px-2.5 py-2 rounded-lg text-left transition border-2 ${
-                                sel ? "border-primary bg-primary/15 shadow-glow" : "border-border/50 bg-background/40 hover:border-primary/40"
-                              }`}>
-                              {sel && <div className="absolute top-1 right-1 h-4 w-4 rounded-full bg-primary grid place-items-center"><Check className="h-2.5 w-2.5 text-primary-foreground" /></div>}
-                              <div className="flex items-center gap-1.5 mb-0.5"><span className="text-base leading-none">{n.emoji}</span><span className="font-bold text-[11px] leading-tight">{n.label}</span></div>
-                              {n.description && <div className="text-[9px] text-muted-foreground leading-tight">{n.description}</div>}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+                  {i < STEPS.length - 1 && <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* ORÇAMENTO */}
-        <div className="rounded-2xl bg-gradient-to-br from-card to-card/50 border border-border p-5 space-y-4 shadow-card">
-          <div className="flex items-center gap-2 font-bold">
-            <div className="h-8 w-8 rounded-lg bg-primary/15 grid place-items-center"><Coins className="h-4 w-4 text-primary" /></div>
-            <div>
-              <div className="text-sm">Orçamento & alcance</div>
-              <div className="text-[11px] text-muted-foreground font-normal">1 coin = 10 pessoas alcançadas</div>
+        {/* STEP 1 — CONTEÚDO */}
+        {step === 1 && (
+          <div className="space-y-5">
+            <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
+              <h2 className="font-bold flex items-center gap-2"><Wand2 className="h-4 w-4 text-primary" /> Identificação</h2>
+              <div>
+                <Label htmlFor="name" className="text-xs uppercase tracking-wider text-muted-foreground">Nome interno (só você vê)</Label>
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Promo Black Friday" className="mt-1.5" maxLength={100} />
+              </div>
             </div>
-          </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Quantas pessoas alcançar</Label>
-              <span className="text-[10px] text-muted-foreground">Máx disponível: {maxReach.toLocaleString("pt-BR")}</span>
-            </div>
-            <div className="relative">
-              <Input type="number" min={10} max={sliderMax} step={10} value={targetCount}
-                onChange={(e) => setTargetCount(Math.max(10, Math.min(sliderMax, parseInt(e.target.value) || 10)))}
-                className="text-3xl font-black h-16 text-center bg-background/50" />
-              <Users className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            </div>
-            <Slider min={10} max={sliderMax} step={10} value={[targetCount]} onValueChange={([v]) => setTargetCount(v)} className="mt-4" />
-            <div className="flex justify-between text-[10px] text-muted-foreground mt-1.5">
-              <span>10</span>
-              <span>{sliderMax.toLocaleString("pt-BR")}</span>
-            </div>
-          </div>
+            <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
+              <h2 className="font-bold flex items-center gap-2"><Eye className="h-4 w-4 text-primary" /> Conteúdo da DM</h2>
 
-          <div className="grid grid-cols-3 gap-2 pt-3 border-t border-border">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <div className="text-[9px] text-muted-foreground uppercase">Custo</div>
-              <div className="font-black text-lg flex items-center gap-1"><Coins className="h-4 w-4 text-primary" />{cost}</div>
-            </div>
-            <div className="p-2 rounded-lg bg-secondary/40">
-              <div className="text-[9px] text-muted-foreground uppercase">Saldo</div>
-              <div className={`font-black text-lg ${myCoins >= cost ? "" : "text-destructive"}`}>{formatCoins(myCoins)}</div>
-            </div>
-            <div className="p-2 rounded-lg bg-success/10">
-              <div className="text-[9px] text-muted-foreground uppercase">Após</div>
-              <div className="font-black text-lg text-success">{formatCoins(Math.max(0, myCoins - cost))}</div>
-            </div>
-          </div>
-        </div>
+              <div>
+                <Label htmlFor="title" className="text-xs uppercase tracking-wider text-muted-foreground">Título (chamada principal)</Label>
+                <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="🎉 Oferta imperdível!" className="mt-1.5 text-base font-semibold" maxLength={120} />
+                <p className="text-[10px] text-muted-foreground mt-1 text-right">{title.length}/120</p>
+              </div>
 
-        {/* CRIATIVO */}
-        <div className="rounded-2xl bg-gradient-to-br from-card to-card/50 border border-border p-5 space-y-4 shadow-card">
-          <div className="flex items-center gap-2 font-bold">
-            <div className="h-8 w-8 rounded-lg bg-primary/15 grid place-items-center"><Wand2 className="h-4 w-4 text-primary" /></div>
-            <div>
-              <div className="text-sm">Criativo do anúncio</div>
-              <div className="text-[11px] text-muted-foreground font-normal">A mensagem que será enviada</div>
-            </div>
-          </div>
+              <div>
+                <Label htmlFor="message" className="text-xs uppercase tracking-wider text-muted-foreground">Mensagem (corpo)</Label>
+                <Textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Escreva aqui... Suporta **negrito**, *itálico* e emojis 🚀"
+                  className="mt-1.5 min-h-[160px] font-mono text-sm" maxLength={2000} />
+                <p className="text-[10px] text-muted-foreground mt-1 text-right">{message.length}/2000</p>
+              </div>
 
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="name" className="text-xs">Nome interno</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Promo de inverno" className="mt-1.5" maxLength={100} />
+              <div>
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Imagem (opcional)</Label>
+                {imageUrl ? (
+                  <div className="mt-1.5 relative inline-block">
+                    <img src={imageUrl} alt="Preview" className="rounded-lg max-h-48 border-2 border-border" />
+                    <button type="button" onClick={() => setImageUrl("")}
+                      className="absolute -top-2 -right-2 h-7 w-7 rounded-full bg-destructive text-white grid place-items-center shadow-lg hover:scale-110 transition">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="mt-1.5 cursor-pointer flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-xl p-6 hover:border-primary/60 hover:bg-primary/5 transition">
+                    <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); }} />
+                    {uploading ? <Loader2 className="h-6 w-6 animate-spin text-primary" /> : <Upload className="h-6 w-6 text-muted-foreground" />}
+                    <div className="text-sm font-semibold">{uploading ? "Enviando..." : "Clique pra adicionar imagem"}</div>
+                    <div className="text-[10px] text-muted-foreground">PNG, JPG, GIF · até 8MB</div>
+                  </label>
+                )}
+              </div>
             </div>
-            <div>
-              <Label htmlFor="title" className="text-xs">Título do anúncio</Label>
-              <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="🎉 Oferta imperdível!" className="mt-1.5" maxLength={120} />
-            </div>
-          </div>
 
-          <div>
-            <Label htmlFor="message" className="text-xs">Mensagem</Label>
-            <Textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Suporta **negrito**, *itálico*, emojis 🎉, e quebras de linha." className="mt-1.5 min-h-[140px] font-mono text-sm" maxLength={2000} />
-            <p className="text-xs text-muted-foreground mt-1 text-right">{message.length}/2000</p>
-          </div>
-
-          <div>
-            <Label className="text-xs">Imagem (opcional)</Label>
-            <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-              <label className="cursor-pointer">
-                <input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); }} />
-                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-secondary/70 text-sm font-medium transition">
-                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
-                  {uploading ? "Enviando..." : imageUrl ? "Trocar imagem" : "Adicionar imagem"}
+            <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
+              <h2 className="font-bold flex items-center gap-2"><ExternalLink className="h-4 w-4 text-primary" /> Botão de ação (opcional)</h2>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="bl" className="text-xs uppercase tracking-wider text-muted-foreground">Texto</Label>
+                  <Input id="bl" value={buttonLabel} onChange={(e) => setButtonLabel(e.target.value)} placeholder="Acessar agora" className="mt-1.5" maxLength={80} />
                 </div>
-              </label>
-              {imageUrl && <Button type="button" size="sm" variant="ghost" onClick={() => setImageUrl("")} className="gap-1"><X className="h-3 w-3" /> Remover</Button>}
+                <div>
+                  <Label htmlFor="bu" className="text-xs uppercase tracking-wider text-muted-foreground">Link</Label>
+                  <Input id="bu" value={buttonUrl} onChange={(e) => setButtonUrl(e.target.value)} placeholder="https://..." className="mt-1.5" />
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Cor do destaque</Label>
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {COLORS.map((c) => (
+                    <button key={c} type="button" onClick={() => setColor(c)}
+                      className={`h-10 w-10 rounded-xl border-2 transition relative ${color === c ? "border-foreground scale-110 shadow-glow" : "border-transparent hover:scale-105"}`}
+                      style={{ backgroundColor: c }}>
+                      {color === c && <Check className="h-4 w-4 text-white absolute inset-0 m-auto drop-shadow" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
+        )}
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="bl" className="text-xs">Texto do botão</Label>
-              <Input id="bl" value={buttonLabel} onChange={(e) => setButtonLabel(e.target.value)} placeholder="Acessar" className="mt-1.5" maxLength={80} />
+        {/* STEP 2 — PÚBLICO */}
+        {step === 2 && (
+          <div className="space-y-5">
+            <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-bold flex items-center gap-2"><Target className="h-4 w-4 text-primary" /> Escolha o nicho</h2>
+                <span className="text-xs px-2 py-1 rounded-full bg-primary/15 font-bold text-primary">
+                  {selectedNiches.length} selecionado{selectedNiches.length !== 1 && "s"}
+                </span>
+              </div>
+
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input value={nicheSearch} onChange={(e) => setNicheSearch(e.target.value)}
+                  placeholder="Buscar nicho... (ex: valorant, anime, lojas)" className="pl-9" />
+              </div>
+
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                {filteredGroups.map((g) => (
+                  <div key={g.id}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xl">{g.emoji}</span>
+                      <h3 className="font-bold text-sm">{g.label}</h3>
+                      <span className="text-[10px] text-muted-foreground">· {g.description}</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {g.niches.map((n) => {
+                        const sel = selectedNiches.includes(n.value);
+                        return (
+                          <button key={n.value} type="button" onClick={() => toggleNiche(n.value)}
+                            className={`relative p-3 rounded-xl text-left transition border-2 ${
+                              sel ? "border-primary bg-primary/15 shadow-glow" : "border-border bg-background/40 hover:border-primary/40"
+                            }`}>
+                            {sel && (
+                              <div className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-primary grid place-items-center">
+                                <Check className="h-3 w-3 text-primary-foreground" />
+                              </div>
+                            )}
+                            <div className="text-2xl mb-1">{n.emoji}</div>
+                            <div className="font-bold text-xs leading-tight">{n.label}</div>
+                            {n.description && <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">{n.description}</div>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+                {filteredGroups.length === 0 && (
+                  <div className="text-center py-8 text-sm text-muted-foreground">Nenhum nicho encontrado pra "{nicheSearch}"</div>
+                )}
+              </div>
             </div>
-            <div>
-              <Label htmlFor="bu" className="text-xs">URL do botão</Label>
-              <Input id="bu" value={buttonUrl} onChange={(e) => setButtonUrl(e.target.value)} placeholder="https://..." className="mt-1.5" />
+
+            <div className="rounded-2xl bg-gradient-to-br from-primary/15 to-primary-glow/10 border border-primary/30 p-5 space-y-4">
+              <h2 className="font-bold flex items-center gap-2"><Coins className="h-4 w-4 text-primary" /> Quantas DMs disparar?</h2>
+              <div className="relative">
+                <Input type="number" min={10} max={sliderMax} step={10} value={targetCount}
+                  onChange={(e) => setTargetCount(Math.max(10, Math.min(sliderMax, parseInt(e.target.value) || 10)))}
+                  className="text-3xl font-black h-16 text-center bg-background/60" />
+                <Users className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              </div>
+              <Slider min={10} max={sliderMax} step={10} value={[targetCount]} onValueChange={([v]) => setTargetCount(v)} />
+              <div className="flex justify-between text-[10px] text-muted-foreground">
+                <span>10</span>
+                <span>Máx alcance: {maxReach.toLocaleString("pt-BR")}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-primary/20">
+                <div className="p-2 rounded-lg bg-background/60 text-center">
+                  <div className="text-[9px] text-muted-foreground uppercase">Custo</div>
+                  <div className="font-black text-base flex items-center justify-center gap-1"><Coins className="h-3.5 w-3.5 text-primary" />{cost}</div>
+                </div>
+                <div className="p-2 rounded-lg bg-background/60 text-center">
+                  <div className="text-[9px] text-muted-foreground uppercase">Saldo</div>
+                  <div className={`font-black text-base ${myCoins >= cost ? "" : "text-destructive"}`}>{formatCoins(myCoins)}</div>
+                </div>
+                <div className="p-2 rounded-lg bg-background/60 text-center">
+                  <div className="text-[9px] text-muted-foreground uppercase">Após</div>
+                  <div className="font-black text-base text-success">{formatCoins(Math.max(0, myCoins - cost))}</div>
+                </div>
+              </div>
             </div>
           </div>
+        )}
 
-          <div>
-            <Label className="text-xs">Cor da borda</Label>
-            <div className="flex gap-2 mt-1.5 flex-wrap">
-              {COLORS.map((c) => (
-                <button key={c} type="button" onClick={() => setColor(c)}
-                  className={`h-9 w-9 rounded-lg border-2 transition relative ${color === c ? "border-foreground scale-110 shadow-glow" : "border-transparent hover:scale-105"}`}
-                  style={{ backgroundColor: c }}>
-                  {color === c && <Check className="h-4 w-4 text-white absolute inset-0 m-auto drop-shadow" />}
-                </button>
-              ))}
+        {/* STEP 3 — REVISAR */}
+        {step === 3 && (
+          <div className="space-y-5">
+            <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
+              <h2 className="font-bold flex items-center gap-2"><Eye className="h-4 w-4 text-primary" /> Resumo final</h2>
+              <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                <Info label="Nome interno" value={name} />
+                <Info label="Título" value={title} />
+                <Info label="Nichos" value={`${selectedNiches.length} selecionado(s)`} />
+                <Info label="Alcance" value={`${targetCount.toLocaleString("pt-BR")} pessoas`} />
+                <Info label="Custo" value={`${cost} DMs`} />
+                <Info label="Saldo após" value={formatCoins(Math.max(0, myCoins - cost))} />
+              </div>
+              <div className="flex flex-wrap gap-1.5 pt-3 border-t border-border">
+                {selectedNiches.map((v) => {
+                  const n = findNiche(v);
+                  if (!n) return null;
+                  return <span key={v} className="text-[11px] px-2 py-1 rounded-md bg-primary/10 text-primary font-semibold">{n.emoji} {n.label}</span>;
+                })}
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-primary-glow/10 border border-primary/30 p-4">
+              <p className="text-sm">
+                <b>Tudo certo?</b> Ao clicar em <b>Disparar agora</b>, vamos enviar pra <b>{targetCount.toLocaleString("pt-BR")}</b> pessoas
+                gastando <b>{cost} DMs</b> do seu saldo. Essa ação não pode ser desfeita.
+              </p>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* AÇÕES */}
-        <div className="sticky bottom-2 z-10 rounded-2xl bg-gradient-to-r from-card to-card/80 backdrop-blur border border-border p-3 shadow-card">
-          <div className="flex gap-2 flex-wrap">
-            <Button type="button" variant="outline" onClick={sendTest} disabled={testing || !message.trim()} className="gap-2 flex-1 min-w-[140px]">
-              {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FlaskConical className="h-4 w-4" />}
-              Testar na minha DM
+        {/* NAV */}
+        <div className="sticky bottom-2 z-10 rounded-2xl bg-card/95 backdrop-blur border border-border p-3 shadow-card">
+          <div className="flex gap-2">
+            {step > 1 && (
+              <Button type="button" variant="outline" onClick={() => setStep((s) => s - 1)} className="gap-2">
+                <ChevronLeft className="h-4 w-4" /> Voltar
+              </Button>
+            )}
+            <Button type="button" variant="ghost" onClick={() => save("draft")} disabled={busy} className="gap-2">
+              <Save className="h-4 w-4" /> Salvar rascunho
             </Button>
-            <Button type="button" variant="secondary" onClick={() => save("draft")} disabled={busy} className="gap-2 flex-1 min-w-[120px]">
-              <Save className="h-4 w-4" /> Rascunho
-            </Button>
-            <Button type="button" variant="discord" onClick={() => save("send")} disabled={busy} className="gap-2 flex-1 min-w-[160px]">
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Disparar agora
-            </Button>
+            <div className="flex-1" />
+            {step < 3 ? (
+              <Button type="button" variant="discord" onClick={goNext} className="gap-2">
+                Continuar <ChevronRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <>
+                <Button type="button" variant="outline" onClick={sendTest} disabled={testing || !message.trim()} className="gap-2">
+                  {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FlaskConical className="h-4 w-4" />} Testar
+                </Button>
+                <Button type="button" variant="discord" onClick={() => save("send")} disabled={busy || myCoins < cost} className="gap-2">
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Disparar agora
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
 
-      {/* COLUNA DIREITA — preview sticky */}
-      <div className="lg:sticky lg:top-4 self-start space-y-3 max-h-[calc(100vh-2rem)] overflow-y-auto pr-1">
-        {/* Resumo */}
-        <div className="rounded-xl bg-gradient-to-br from-primary/15 to-primary-glow/10 border border-primary/30 p-3">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Resumo do anúncio</div>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div><div className="text-[9px] text-muted-foreground uppercase">Nichos</div><div className="font-black text-base">{selectedNiches.length}</div></div>
-            <div><div className="text-[9px] text-muted-foreground uppercase">Alcance</div><div className="font-black text-base flex items-center justify-center gap-0.5"><Users className="h-3 w-3" />{targetCount.toLocaleString("pt-BR")}</div></div>
-            <div><div className="text-[9px] text-muted-foreground uppercase">Custo</div><div className="font-black text-base flex items-center justify-center gap-0.5"><Coins className="h-3 w-3 text-primary" />{cost}</div></div>
-          </div>
-          {selectedNiches.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-primary/20 flex flex-wrap gap-1">
-              {selectedNiches.slice(0, 8).map((v) => {
-                const n = findNiche(v);
-                if (!n) return null;
-                return <span key={v} className="text-[10px] px-1.5 py-0.5 rounded bg-background/60">{n.emoji} {n.label}</span>;
-              })}
-              {selectedNiches.length > 8 && <span className="text-[10px] px-1.5 py-0.5 rounded bg-background/60">+{selectedNiches.length - 8}</span>}
-            </div>
-          )}
-        </div>
-
-        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Preview da DM</div>
+      {/* PREVIEW STICKY */}
+      <div className="lg:sticky lg:top-4 self-start space-y-3">
+        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Preview ao vivo</div>
         <div className="rounded-xl bg-[#313338] border border-[#1e1f22] p-4 shadow-2xl">
           <div className="flex items-center gap-2 pb-3 mb-3 border-b border-[#3f4147]">
             <span className="text-[#80848e] text-[10px] uppercase tracking-wider">Mensagem direta</span>
@@ -444,14 +496,16 @@ const NewCampaign = () => {
             </div>
           </div>
         </div>
-
-        <Button type="button" variant="outline" size="sm" onClick={sendTest} disabled={testing || !message.trim()} className="w-full gap-2">
-          {testing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FlaskConical className="h-3.5 w-3.5" />}
-          Receber teste no Discord
-        </Button>
       </div>
     </div>
   );
 };
+
+const Info = ({ label, value }: { label: string; value: string }) => (
+  <div className="rounded-lg bg-secondary/40 p-3">
+    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+    <div className="font-bold truncate">{value || "—"}</div>
+  </div>
+);
 
 export default NewCampaign;
