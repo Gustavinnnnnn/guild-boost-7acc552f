@@ -35,5 +35,10 @@ export const useProfile = () => {
 
   useEffect(() => { refresh(); }, [refresh]);
 
+  useEffect(() => {
+    window.addEventListener("profile:refresh", refresh);
+    return () => window.removeEventListener("profile:refresh", refresh);
+  }, [refresh]);
+
   return { profile, loading, refresh, isAdmin, isDiscordConnected: !!profile?.discord_id };
 };
