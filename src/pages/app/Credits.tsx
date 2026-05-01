@@ -379,6 +379,17 @@ const Credits = () => {
                     <><Copy className="h-4 w-4 mr-1" /> Copiar código PIX</>
                   )}
                 </Button>
+                {paymentNotice?.includes("inativo") && (
+                  <Button
+                    onClick={() => buy(pix.planKey)}
+                    disabled={busy !== null}
+                    variant="outline"
+                    className="w-full h-11 mt-2 font-black uppercase tracking-wider"
+                  >
+                    {busy === pix.planKey ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
+                    Gerar novo PIX
+                  </Button>
+                )}
               </div>
 
               {/* STATUS DE PAGAMENTO */}
