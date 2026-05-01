@@ -3,21 +3,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import QRCode from "qrcode";
 import {
   Check, Crown, Loader2, Copy, MessageCircle, Sparkles, ShieldCheck, Zap,
-  X, QrCode, Clock, CheckCircle2,
+  X, QrCode, Clock, CheckCircle2, Target, TrendingUp, Radio,
 } from "lucide-react";
 
 type PlanKey = "basico" | "pro" | "elite";
+type PixState = { code: string; ref: string; qr?: string; qrDataUrl?: string; coins: number; price: string; planName: string; expiresAt?: string | null };
 
-const PLANS: { key: PlanKey; name: string; price: string; dms: number; tagline: string; perks: string[]; highlight?: boolean }[] = [
+const PLANS: { key: PlanKey; name: string; price: string; dms: number; tagline: string; angle: string; badge: string; perks: string[]; highlight?: boolean }[] = [
   {
     key: "basico",
     name: "Básico",
     price: "19",
     dms: 90,
     tagline: "Pra começar",
-    perks: ["90 DMs no saldo", "Disparo segmentado", "Métricas no painel"],
+    angle: "Teste rápido de audiência",
+    badge: "Entrada",
+    perks: ["Saldo liberado após confirmação", "Campanha com métrica", "Ideal pra validar oferta"],
   },
   {
     key: "pro",
@@ -25,7 +29,9 @@ const PLANS: { key: PlanKey; name: string; price: string; dms: number; tagline: 
     price: "39",
     dms: 220,
     tagline: "Mais comprado",
-    perks: ["220 DMs no saldo", "Melhor custo por DM", "Prioridade na fila", "Suporte rápido"],
+    angle: "Volume forte pra conversão",
+    badge: "Melhor escala",
+    perks: ["Maior volume por recarga", "Custo por DM mais agressivo", "Prioridade na fila", "Suporte rápido"],
     highlight: true,
   },
   {
@@ -34,9 +40,43 @@ const PLANS: { key: PlanKey; name: string; price: string; dms: number; tagline: 
     price: "79",
     dms: 500,
     tagline: "Pra escalar",
-    perks: ["500 DMs no saldo", "Custo por DM mais baixo", "Suporte VIP"],
+    angle: "Disparo pesado de tráfego",
+    badge: "Máxima força",
+    perks: ["Maior poder de disparo", "Menor custo por DM", "Suporte VIP", "Feito pra escalar servidor"],
   },
 ];
+
+const callPaymentFunction = async <T,>(functionName: string, payload: Record<string, unknown>): Promise<T> => {
+  const { data: sessionData } = await supabase.auth.getSession();
+  let session = sessionData.session;
+
+  if (!session) throw new Error("auth_required");
+
+  const expSec = session.expires_at ?? 0;
+  if (expSec * 1000 - Date.now() < 60_000) {
+    const { data: refreshed, error } = await supabase.auth.refreshSession();
+    if (error || !refreshed.session) throw new Error("auth_required");
+    session = refreshed.session;
+  }
+
+  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.access_token}`,
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const text = await response.text();
+  const result = text ? JSON.parse(text) : null;
+  if (!response.ok) {
+    const message = result?.message || result?.error || `payment_function_${response.status}`;
+    throw new Error(message);
+  }
+  return result as T;
+};
 
 const Credits = () => {
   const [busy, setBusy] = useState<PlanKey | null>(null);
