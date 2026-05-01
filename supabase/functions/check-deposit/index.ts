@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     }
 
     // Se já aprovado, retorna
-    if (deposit.status === "approved") {
+    if (deposit.status === "approved" || deposit.status === "paid") {
       return new Response(JSON.stringify({ status: "approved", coins: deposit.coins }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -64,7 +64,9 @@ Deno.serve(async (req) => {
       const res = await fetch(url, { headers: { "X-API-Key": PARADISE_API_KEY } });
       if (res.ok) {
         const data = await res.json();
-        const newStatus = data.status;
+        const rawStatus = data.status || data.data?.status;
+        // Normaliza: "paid" também conta como aprovado
+        const newStatus = (rawStatus === "paid") ? "approved" : rawStatus;
         if (newStatus && newStatus !== deposit.status) {
           await admin.from("pending_deposits").update({
             status: newStatus,
