@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   MessageCircle, Megaphone, Send, MousePointerClick, Plus, Users, Ban, MailX,
   UserX, AlertTriangle, TrendingUp, Sparkles, ArrowUpRight, Zap, Server, Rocket,
-  CheckCircle2,
+  CheckCircle2, Crown, ShieldCheck,
 } from "lucide-react";
 
 const formatDMs = (n: number) => n.toLocaleString("pt-BR");
@@ -32,7 +32,7 @@ const StatCard = ({ icon: Icon, label, value, sub, accent, gradient }: any) => (
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { profile, isDiscordConnected } = useProfile();
+  const { profile, isDiscordConnected, isAdmin } = useProfile();
   const [s, setS] = useState({
     sent: 0, delivered: 0, blocked: 0, dmClosed: 0, deleted: 0, otherFail: 0,
     clicks: 0, spent: 0, campaigns: 0, targeted: 0,
@@ -85,6 +85,28 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-7xl space-y-7">
+      {/* BANNER ADMIN - só aparece pra admins */}
+      {isAdmin && (
+        <Link to="/app/admin" className="block group">
+          <div className="relative overflow-hidden rounded-2xl border-2 border-yellow-500/40 bg-gradient-to-r from-yellow-500/15 via-amber-500/10 to-yellow-500/15 p-4 hover:border-yellow-500 transition">
+            <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-yellow-500/20 blur-2xl group-hover:bg-yellow-500/30 transition" />
+            <div className="relative flex items-center gap-3">
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-yellow-500 to-amber-600 grid place-items-center shadow-lg shrink-0">
+                <Crown className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-[9px] uppercase tracking-widest font-black mb-0.5">
+                  <ShieldCheck className="h-2.5 w-2.5" /> Admin
+                </div>
+                <div className="font-black text-sm md:text-base">Painel administrativo</div>
+                <div className="text-[11px] text-muted-foreground">Métricas globais, controle do bot, lista de usuários</div>
+              </div>
+              <ArrowUpRight className="h-5 w-5 text-yellow-600 dark:text-yellow-400 group-hover:translate-x-1 group-hover:-translate-y-1 transition" />
+            </div>
+          </div>
+        </Link>
+      )}
+
       {/* HERO PRINCIPAL */}
       <div className="grid lg:grid-cols-[1fr,1fr] gap-4">
         {/* Saldo */}
