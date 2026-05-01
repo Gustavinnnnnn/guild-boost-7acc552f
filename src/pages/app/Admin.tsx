@@ -52,6 +52,42 @@ const Admin = () => {
   const [savingToken, setSavingToken] = useState(false);
   const [loadingToken, setLoadingToken] = useState(false);
 
+  // Credit management
+  const [userQuery, setUserQuery] = useState("");
+  const [userResults, setUserResults] = useState<any[]>([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [creditAmount, setCreditAmount] = useState<string>("");
+  const [creditReason, setCreditReason] = useState("");
+  const [adjusting, setAdjusting] = useState(false);
+
+  const searchUsers = async (q: string) => {
+    setSearchingUsers(true);
+    const { data, error } = await supabase.functions.invoke("admin-credit-user", { body: { action: "search_users", q } });
+    setSearchingUsers(false);
+    if (error || !data?.success) return toast.error("Falha ao buscar usuários");
+    setUserResults(data.users);
+  };
+
+  const adjustCredits = async (sign: 1 | -1) => {
+    if (!selectedUser) return toast.error("Escolha um usuário");
+    const n = parseInt(creditAmount, 10);
+    if (!Number.isFinite(n) || n <= 0) return toast.error("Quantidade inválida");
+    setAdjusting(true);
+    const { data, error } = await supabase.functions.invoke("admin-credit-user", {
+      body: { action: "adjust_credits", user_id: selectedUser.id, amount: sign * n, description: creditReason || undefined },
+    });
+    setAdjusting(false);
+    if (error || !data?.success) return toast.error("Falha: " + (data?.error || error?.message || "erro"));
+    toast.success(`${sign > 0 ? "+" : "-"}${n} DMs · ${selectedUser.username} agora tem ${data.user.new_credits}`);
+    setSelectedUser({ ...selectedUser, credits: data.user.new_credits });
+    setUserResults((prev) => prev.map((u) => u.id === selectedUser.id ? { ...u, credits: data.user.new_credits } : u));
+    setCreditAmount("");
+    setCreditReason("");
+    loadStats();
+  };
+
+
   const loadToken = async () => {
     setLoadingToken(true);
     const { data } = await supabase.functions.invoke("admin-bot-token", { body: { action: "get" } });
