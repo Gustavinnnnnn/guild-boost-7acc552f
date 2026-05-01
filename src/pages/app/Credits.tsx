@@ -200,66 +200,81 @@ const Credits = () => {
       </div>
 
       {/* PLANOS */}
-      <div className="grid md:grid-cols-3 gap-5">
-        {PLANS.map((p) => (
-          <div
-            key={p.key}
-            className={`relative rounded-3xl p-6 md:p-7 transition-all flex flex-col ${
-              p.highlight
-                ? "border-2 border-primary bg-gradient-to-br from-primary/10 via-card to-card shadow-[0_0_50px_-10px_hsl(var(--primary)/0.6)] md:scale-[1.04]"
-                : "border border-border bg-card hover:border-primary/40"
-            }`}
-          >
-            {p.highlight && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-wider shadow-glow flex items-center gap-1">
-                <Crown className="h-3 w-3" /> {p.tagline}
-              </div>
-            )}
-
-            <div className="text-center mb-5 mt-1">
-              <div className="text-xl font-black tracking-tight">{p.name}</div>
-              {!p.highlight && (
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mt-0.5">
-                  {p.tagline}
-                </div>
-              )}
-            </div>
-
-            <div className="text-center mb-6">
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="text-sm text-muted-foreground">R$</span>
-                <span className={`text-5xl font-black ${p.highlight ? "text-primary" : ""}`}>{p.price}</span>
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">pagamento único · PIX</div>
-            </div>
-
-            <div className="rounded-xl bg-background/40 border border-border p-3 mb-5 text-center">
-              <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Você recebe</div>
-              <div className={`text-2xl font-black mt-0.5 ${p.highlight ? "text-primary" : ""}`}>
-                {p.dms.toLocaleString("pt-BR")} <span className="text-sm font-bold text-muted-foreground">DMs</span>
-              </div>
-            </div>
-
-            <ul className="space-y-2.5 mb-6 flex-1">
-              {p.perks.map((perk) => (
-                <li key={perk} className="flex items-start gap-2 text-sm">
-                  <Check className={`h-4 w-4 mt-0.5 shrink-0 ${p.highlight ? "text-primary" : "text-muted-foreground"}`} />
-                  <span>{perk}</span>
-                </li>
-              ))}
-            </ul>
-
-            <Button
-              onClick={() => buy(p.key)}
-              disabled={busy !== null}
-              variant={p.highlight ? "discord" : "outline"}
-              className="w-full h-12 font-black uppercase tracking-wider"
+      <div className="grid md:grid-cols-3 gap-4 md:gap-5 items-stretch">
+        {PLANS.map((p) => {
+          const PlanIcon = p.key === "basico" ? Target : p.key === "pro" ? TrendingUp : Radio;
+          return (
+            <div
+              key={p.key}
+              className={`relative overflow-hidden rounded-lg border p-5 md:p-6 transition-all flex flex-col min-h-[430px] ${
+                p.highlight
+                  ? "border-primary bg-gradient-to-b from-primary/18 via-card to-card md:-translate-y-2"
+                  : "border-border bg-card hover:border-primary/50"
+              }`}
             >
-              {busy === p.key ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
-              Comprar agora
-            </Button>
-          </div>
-        ))}
+              <div className="flex items-start justify-between gap-3 mb-5">
+                <div className={`h-12 w-12 rounded-lg grid place-items-center ${p.highlight ? "bg-primary text-primary-foreground" : "bg-primary/12 text-primary"}`}>
+                  <PlanIcon className="h-5 w-5" />
+                </div>
+                <div className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${p.highlight ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
+                  {p.badge}
+                </div>
+              </div>
+
+              <div className="mb-5">
+                <div className="text-2xl font-black tracking-tight">{p.name}</div>
+                <div className="text-sm font-semibold text-muted-foreground mt-1">{p.angle}</div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-background/55 p-4 mb-4">
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Investimento</div>
+                    <div className="flex items-baseline gap-1 mt-1">
+                      <span className="text-sm text-muted-foreground">R$</span>
+                      <span className={`text-5xl font-black leading-none ${p.highlight ? "text-primary" : "text-foreground"}`}>{p.price}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Entrega</div>
+                    <div className={`text-2xl font-black mt-1 ${p.highlight ? "text-primary" : "text-foreground"}`}>{p.dms.toLocaleString("pt-BR")}</div>
+                    <div className="text-[10px] font-bold text-muted-foreground">DMs</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mb-5">
+                <div className="rounded-lg bg-secondary/70 p-3">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-black">PIX</div>
+                  <div className="text-sm font-black mt-1">Na hora</div>
+                </div>
+                <div className="rounded-lg bg-secondary/70 p-3">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-black">Saldo</div>
+                  <div className="text-sm font-black mt-1">Não expira</div>
+                </div>
+              </div>
+
+              <ul className="space-y-2.5 mb-6 flex-1">
+                {p.perks.map((perk) => (
+                  <li key={perk} className="flex items-start gap-2 text-sm">
+                    <Check className={`h-4 w-4 mt-0.5 shrink-0 ${p.highlight ? "text-primary" : "text-muted-foreground"}`} />
+                    <span>{perk}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                onClick={() => buy(p.key)}
+                disabled={busy !== null}
+                variant={p.highlight ? "discord" : "outline"}
+                className="w-full h-12 font-black uppercase tracking-wider"
+              >
+                {busy === p.key ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                Gerar PIX
+              </Button>
+            </div>
+          );
+        })}
       </div>
 
       {/* GARANTIA */}
