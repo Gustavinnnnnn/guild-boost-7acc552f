@@ -8,7 +8,6 @@ import {
   Loader2,
   ArrowRight,
   Rocket,
-  Settings2,
   Zap,
   TrendingUp,
   BarChart3,
@@ -16,8 +15,12 @@ import {
   MousePointerClick,
   ShieldCheck,
   Target,
-  Sparkles,
   CheckCircle2,
+  Crosshair,
+  Megaphone,
+  Flame,
+  Lock,
+  XCircle,
 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -50,21 +53,10 @@ const Landing = () => {
     window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=${state}&prompt=consent`;
   };
 
-  const steps = [
-    { icon: Settings2, title: "Conecte", desc: "Entre com Discord e escolha o servidor que você quer movimentar." },
-    { icon: Zap, title: "Dispare", desc: "Crie a campanha pelo painel e defina quantas DMs quer enviar." },
-    { icon: TrendingUp, title: "Acompanhe", desc: "Veja saldo, envios e resultado sem depender de bot ou planilha." },
-  ];
-
-  const panelItems = [
-    { icon: BarChart3, title: "Números claros", desc: "Saldo, campanhas e desempenho em uma tela só." },
-    { icon: Target, title: "Campanha rápida", desc: "Texto, destino e quantidade configurados sem enrolação." },
-    { icon: Sparkles, title: "Recarga direta", desc: "Comprou plano, as DMs entram no saldo da conta." },
-  ];
-
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-sans">
-      <header className="sticky top-0 z-50 bg-background/95 border-b border-border">
+      {/* HEADER */}
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto px-4 h-14 md:h-16 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="h-9 w-9 rounded-lg bg-primary grid place-items-center shrink-0">
@@ -87,132 +79,239 @@ const Landing = () => {
       </header>
 
       <main>
+        {/* HERO */}
         <section className="relative border-b border-border bg-background">
-          <div className="container mx-auto px-4 py-12 md:py-20">
-            <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-14 items-center">
-              <div className="text-center lg:text-left">
-                <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[10px] md:text-xs font-black uppercase tracking-normal text-primary mb-5">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Divulgação pra servidor parado
-                </div>
+          <div className="container mx-auto px-4 py-14 md:py-24">
+            <div className="max-w-5xl mx-auto text-center">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-[10px] md:text-xs font-black uppercase tracking-wider text-primary mb-6">
+                <Flame className="h-3.5 w-3.5" />
+                A primeira plataforma de ads pra Discord
+              </div>
 
-                <h1 className="font-display text-[2.45rem] sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[0.95] tracking-normal mb-6 max-w-4xl mx-auto lg:mx-0">
-                  Seu servidor não precisa morrer no silêncio.
-                </h1>
+              <h1 className="font-display text-[2.5rem] sm:text-5xl md:text-7xl lg:text-[5.5rem] font-black leading-[0.9] tracking-tight mb-6">
+                Se o Facebook tem Ads,<br className="hidden sm:block" />{" "}
+                <span className="text-primary">o Discord agora também.</span>
+              </h1>
 
-                <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 mb-8 leading-relaxed">
-                  Pare de implorar divulgação em grupo. Compre DMs, crie campanhas pelo site e leve gente nova para a sua comunidade com controle total do saldo.
-                </p>
+              <p className="text-base md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-4 leading-relaxed">
+                Pare de torrar grana em tráfego que ninguém vê.
+              </p>
+              <p className="text-base md:text-xl text-foreground/90 max-w-3xl mx-auto mb-10 leading-relaxed font-semibold">
+                A gente coloca seu servidor na <span className="text-primary">DM de gente real</span>, com campanha, métrica e controle de saldo — igualzinho Facebook Ads, só que dentro do Discord.
+              </p>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 mb-6">
-                  <button
-                    onClick={connectDiscord}
-                    disabled={busy}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-3 h-14 px-6 md:px-8 rounded-lg bg-primary text-primary-foreground font-black text-sm md:text-base uppercase tracking-normal transition-colors hover:bg-primary/90 disabled:opacity-50"
-                  >
-                    {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <DiscordIcon className="h-5 w-5" />}
-                    Começar agora
-                    <ArrowRight className="h-5 w-5" />
-                  </button>
-                  <div className="text-xs text-muted-foreground text-center sm:text-left">
-                    Sem cartão no cadastro<br className="hidden sm:block" /> saldo liberado após pagamento
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+                <button
+                  onClick={connectDiscord}
+                  disabled={busy}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 h-14 md:h-16 px-6 md:px-10 rounded-lg bg-primary text-primary-foreground font-black text-sm md:text-base uppercase tracking-wider transition-colors hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <DiscordIcon className="h-5 w-5" />}
+                  Lançar minha primeira campanha
+                  <ArrowRight className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs md:text-sm text-muted-foreground">
+                {["Sem cartão no cadastro", "Saldo liberado na hora", "Cancela quando quiser"].map((item) => (
+                  <div key={item} className="flex items-center gap-1.5">
+                    <CheckCircle2 className="h-4 w-4 text-success" />
+                    <span>{item}</span>
                   </div>
-                </div>
+                ))}
+              </div>
+            </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-2xl mx-auto lg:mx-0">
-                  {["Campanhas pelo site", "Compra de DMs", "Painel responsivo"].map((item) => (
-                    <div key={item} className="flex items-center justify-center sm:justify-start gap-2 text-sm text-foreground/80">
-                      <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
-                      <span>{item}</span>
-                    </div>
-                  ))}
+            {/* PAINEL DEMO */}
+            <div className="mt-14 md:mt-20 max-w-4xl mx-auto rounded-2xl border border-border bg-card p-4 md:p-6 shadow-2xl shadow-primary/5">
+              <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-black">Campanha ao vivo</p>
+                  <p className="text-sm md:text-base font-bold">Boost — Servidor de Trade</p>
+                </div>
+                <span className="rounded-full bg-success/10 text-success border border-success/30 px-3 py-1 text-[10px] font-black uppercase">
+                  ● rodando
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 mb-3">
+                <div className="rounded-xl border border-border bg-background p-3 md:p-4">
+                  <div className="flex items-center gap-1.5 text-[9px] md:text-[10px] uppercase text-muted-foreground font-black tracking-wider mb-2">
+                    <Users className="h-3 w-3 text-primary" /> Saldo
+                  </div>
+                  <div className="font-display text-2xl md:text-4xl font-black text-primary">1.250</div>
+                  <div className="text-[10px] text-success mt-1 font-semibold">DMs</div>
+                </div>
+                <div className="rounded-xl border border-border bg-background p-3 md:p-4">
+                  <div className="flex items-center gap-1.5 text-[9px] md:text-[10px] uppercase text-muted-foreground font-black tracking-wider mb-2">
+                    <MousePointerClick className="h-3 w-3 text-primary" /> Enviadas
+                  </div>
+                  <div className="font-display text-2xl md:text-4xl font-black">812</div>
+                  <div className="text-[10px] text-muted-foreground mt-1">hoje</div>
+                </div>
+                <div className="rounded-xl border border-border bg-background p-3 md:p-4">
+                  <div className="flex items-center gap-1.5 text-[9px] md:text-[10px] uppercase text-muted-foreground font-black tracking-wider mb-2">
+                    <TrendingUp className="h-3 w-3 text-primary" /> Entradas
+                  </div>
+                  <div className="font-display text-2xl md:text-4xl font-black text-success">+184</div>
+                  <div className="text-[10px] text-muted-foreground mt-1">no servidor</div>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-border bg-card p-4 md:p-5">
-                <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-normal text-muted-foreground font-black">Painel</p>
-                    <p className="text-sm font-bold">Resumo da campanha</p>
-                  </div>
-                  <span className="rounded-full bg-success/10 text-success border border-success/20 px-3 py-1 text-[10px] font-black uppercase">
-                    ativo
-                  </span>
+              <div className="rounded-xl border border-border bg-background p-4">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <span className="text-[10px] uppercase text-muted-foreground font-black tracking-wider">Progresso</span>
+                  <span className="text-[10px] text-primary font-black">65%</span>
                 </div>
-
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <div className="rounded-xl border border-border bg-background p-4">
-                    <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-black tracking-normal mb-2">
-                      <Users className="h-3 w-3 text-primary" /> DMs no saldo
-                    </div>
-                    <div className="font-display text-3xl md:text-4xl font-black text-primary">1.250</div>
-                    <div className="text-[10px] text-success mt-1 font-semibold">prontas pra usar</div>
-                  </div>
-                  <div className="rounded-xl border border-border bg-background p-4">
-                    <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground font-black tracking-normal mb-2">
-                      <MousePointerClick className="h-3 w-3 text-primary" /> Envios hoje
-                    </div>
-                    <div className="font-display text-3xl md:text-4xl font-black">218</div>
-                    <div className="text-[10px] text-muted-foreground mt-1">campanha rodando</div>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-border bg-background p-4 mb-3">
-                  <div className="flex items-center justify-between gap-3 mb-4">
-                    <span className="text-[10px] uppercase text-muted-foreground font-black tracking-normal">Progresso da campanha</span>
-                    <span className="text-[10px] text-primary font-black">62%</span>
-                  </div>
-                  <div className="h-3 rounded-full bg-secondary overflow-hidden">
-                    <div className="h-full w-[62%] rounded-full bg-primary" />
-                  </div>
-                  <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                    {[
-                      ["500", "fila"],
-                      ["312", "enviadas"],
-                      ["42", "cliques"],
-                    ].map(([value, label]) => (
-                      <div key={label} className="rounded-lg border border-border bg-card p-2">
-                        <div className="font-display text-lg font-black">{value}</div>
-                        <div className="text-[10px] text-muted-foreground uppercase">{label}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between rounded-xl border border-border bg-background px-4 py-3">
-                  <span className="text-sm font-semibold">Próximo envio</span>
-                  <span className="text-[10px] uppercase text-primary font-black tracking-normal">automático</span>
+                <div className="h-3 rounded-full bg-secondary overflow-hidden">
+                  <div className="h-full w-[65%] rounded-full bg-primary" />
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="py-16 md:py-24 border-b border-border bg-card/35">
-          <div className="container mx-auto px-4 text-center max-w-4xl">
-            <p className="text-2xl md:text-5xl font-display font-black leading-tight">
-              Divulgação sem constância vira sorte. Aqui vira processo.
-            </p>
-            <p className="mt-5 text-base md:text-lg text-muted-foreground">
-              O foco é simples: comprar saldo, criar campanha e acompanhar o resultado sem depender de bot no chat.
-            </p>
-          </div>
-        </section>
-
-        <section className="py-16 md:py-24">
-          <div className="container mx-auto px-4">
+        {/* DOR */}
+        <section className="py-16 md:py-24 border-b border-border bg-card/40">
+          <div className="container mx-auto px-4 max-w-5xl">
             <div className="text-center mb-10 md:mb-14">
-              <div className="text-xs uppercase tracking-normal text-primary font-black mb-3">Como funciona</div>
-              <h2 className="font-display text-3xl md:text-5xl font-black">Três passos, tudo pelo site</h2>
+              <div className="text-xs uppercase tracking-wider text-destructive font-black mb-3">A real</div>
+              <h2 className="font-display text-3xl md:text-5xl font-black leading-tight">
+                Você já tentou de tudo.<br className="hidden sm:block" /> E nada move o servidor.
+              </h2>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-3 md:gap-4">
+              {[
+                "Pagou bot de divulgação e ninguém entrou.",
+                "Trocou divulgação em grupo e só apareceu fake.",
+                "Rodou anúncio fora do Discord e o público não converte.",
+              ].map((p) => (
+                <div key={p} className="flex items-start gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-5">
+                  <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                  <p className="text-sm md:text-base text-foreground/90 leading-relaxed">{p}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-center mt-10 text-base md:text-xl text-muted-foreground max-w-3xl mx-auto">
+              O problema não é seu servidor. <span className="text-foreground font-bold">É o canal.</span> Sua audiência tá no Discord — e até hoje ninguém montou um sistema sério pra falar com ela.
+            </p>
+          </div>
+        </section>
+
+        {/* SOLUÇÃO — DISCORD ADS */}
+        <section className="py-16 md:py-24 border-b border-border">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="text-center mb-12 md:mb-16">
+              <div className="text-xs uppercase tracking-wider text-primary font-black mb-3">A virada</div>
+              <h2 className="font-display text-3xl md:text-6xl font-black leading-[0.95] max-w-4xl mx-auto">
+                Tráfego pago. Mas dentro do <span className="text-primary">Discord</span>.
+              </h2>
+              <p className="mt-5 text-base md:text-xl text-muted-foreground max-w-2xl mx-auto">
+                Único sistema do mercado que entrega mensagem direta pra usuário real, com controle igual gerenciador de anúncios.
+              </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4 md:gap-5 max-w-5xl mx-auto">
-              {steps.map((s, i) => (
-                <div key={s.title} className="rounded-2xl border border-border bg-card p-6 md:p-7">
-                  <div className="h-11 w-11 rounded-xl bg-primary/10 border border-primary/20 grid place-items-center mb-5">
-                    <s.icon className="h-5 w-5 text-primary" />
+            <div className="grid md:grid-cols-3 gap-4 md:gap-5">
+              {[
+                {
+                  icon: Crosshair,
+                  title: "Mira certa",
+                  desc: "Sua mensagem chega no privado de quem realmente usa Discord — não em fake, não em bot.",
+                },
+                {
+                  icon: Megaphone,
+                  title: "Volume de verdade",
+                  desc: "Dispare centenas ou milhares de DMs por campanha. Você define o tamanho do tiro.",
+                },
+                {
+                  icon: BarChart3,
+                  title: "Métrica no painel",
+                  desc: "Saldo, enviadas, progresso e resultado. Igual gerenciador de Ads, sem planilha.",
+                },
+              ].map((f) => (
+                <div key={f.title} className="rounded-2xl border border-border bg-card p-6 md:p-7 hover:border-primary/40 transition-colors">
+                  <div className="h-12 w-12 rounded-xl bg-primary grid place-items-center mb-5">
+                    <f.icon className="h-6 w-6 text-primary-foreground" strokeWidth={2.5} />
                   </div>
-                  <div className="text-[10px] uppercase text-muted-foreground font-black mb-2">0{i + 1}</div>
+                  <h3 className="font-display text-xl md:text-2xl font-black mb-2">{f.title}</h3>
+                  <p className="text-muted-foreground text-sm md:text-base leading-relaxed">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* COMPARATIVO FB ADS vs SERVERBOOST */}
+        <section className="py-16 md:py-24 border-b border-border bg-card/40">
+          <div className="container mx-auto px-4 max-w-5xl">
+            <div className="text-center mb-10 md:mb-14">
+              <div className="text-xs uppercase tracking-wider text-primary font-black mb-3">Compara aí</div>
+              <h2 className="font-display text-3xl md:text-5xl font-black leading-tight">
+                Mesmo poder do Facebook Ads.<br className="hidden sm:block" /> Outro território.
+              </h2>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4 md:gap-5">
+              <div className="rounded-2xl border border-border bg-background p-6 md:p-7">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-black mb-3">Facebook Ads</div>
+                <div className="font-display text-2xl font-black mb-5">Anuncia no feed</div>
+                <ul className="space-y-3 text-sm md:text-base">
+                  {[
+                    "Campanha por gerenciador",
+                    "Segmentação de público",
+                    "Métricas em tempo real",
+                    "Saldo gerenciado por conta",
+                  ].map((i) => (
+                    <li key={i} className="flex items-center gap-2 text-foreground/80">
+                      <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0" /> {i}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="rounded-2xl border-2 border-primary bg-primary/5 p-6 md:p-7 relative">
+                <span className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-wider">
+                  ServerBoost
+                </span>
+                <div className="text-[10px] uppercase tracking-wider text-primary font-black mb-3">Discord Ads</div>
+                <div className="font-display text-2xl font-black mb-5">Entrega na DM</div>
+                <ul className="space-y-3 text-sm md:text-base">
+                  {[
+                    "Campanha por painel próprio",
+                    "Mensagem direta em quem importa",
+                    "Saldo, envios e cliques no dashboard",
+                    "Recarga instantânea no plano",
+                  ].map((i) => (
+                    <li key={i} className="flex items-center gap-2 text-foreground">
+                      <CheckCircle2 className="h-4 w-4 text-success shrink-0" /> <span className="font-semibold">{i}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* COMO FUNCIONA */}
+        <section className="py-16 md:py-24 border-b border-border">
+          <div className="container mx-auto px-4 max-w-5xl">
+            <div className="text-center mb-10 md:mb-14">
+              <div className="text-xs uppercase tracking-wider text-primary font-black mb-3">Como funciona</div>
+              <h2 className="font-display text-3xl md:text-5xl font-black">3 passos. Tudo pelo painel.</h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4 md:gap-5">
+              {[
+                { icon: DiscordIcon, title: "Conecta", desc: "Login com Discord, escolhe o servidor que vai receber tráfego." },
+                { icon: Zap, title: "Carrega o saldo", desc: "Compra um plano, suas DMs caem na conta na hora." },
+                { icon: Target, title: "Dispara a campanha", desc: "Escreve a mensagem, define quantidade e acompanha o resultado." },
+              ].map((s, i) => (
+                <div key={s.title} className="rounded-2xl border border-border bg-card p-6 md:p-7">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="h-11 w-11 rounded-xl bg-primary/10 border border-primary/20 grid place-items-center">
+                      <s.icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="text-[10px] uppercase text-muted-foreground font-black tracking-wider">Passo 0{i + 1}</div>
+                  </div>
                   <h3 className="font-display text-xl font-black mb-2">{s.title}</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">{s.desc}</p>
                 </div>
@@ -221,61 +320,48 @@ const Landing = () => {
           </div>
         </section>
 
-        <section className="py-16 md:py-24 border-y border-border bg-card/35">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-10 md:mb-14">
-              <div className="text-xs uppercase tracking-normal text-primary font-black mb-3">Painel</div>
-              <h2 className="font-display text-3xl md:text-5xl font-black">Feito pra vender e controlar DMs</h2>
-            </div>
-
-            <div className="grid lg:grid-cols-3 gap-4 md:gap-5 max-w-6xl mx-auto">
-              {panelItems.map((p) => (
-                <div key={p.title} className="rounded-2xl border border-border bg-background p-6">
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 border border-primary/20 grid place-items-center shrink-0">
-                      <p.icon className="h-5 w-5 text-primary" />
-                    </div>
-                    <h3 className="font-display text-lg font-black leading-tight">{p.title}</h3>
-                  </div>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{p.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="py-14 md:py-20 border-b border-border">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <div className="grid sm:grid-cols-3 gap-3 md:gap-5">
-              {[
-                { icon: Zap, label: "Sistema disponível 24h" },
-                { icon: Target, label: "Campanhas criadas no painel" },
-                { icon: ShieldCheck, label: "Saldo controlado por conta" },
-              ].map((c) => (
-                <div key={c.label} className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-4">
-                  <c.icon className="h-5 w-5 text-primary shrink-0" />
-                  <span className="text-sm font-semibold text-foreground/80">{c.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="py-16 md:py-24">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="font-display text-3xl md:text-6xl font-black leading-tight mb-5 max-w-3xl mx-auto">
-              Comece antes que seu servidor esfrie de vez.
+        {/* RAREZA */}
+        <section className="py-16 md:py-24 border-b border-border bg-card/40">
+          <div className="container mx-auto px-4 max-w-4xl text-center">
+            <Lock className="h-10 w-10 text-primary mx-auto mb-5" />
+            <h2 className="font-display text-3xl md:text-5xl font-black leading-tight mb-5">
+              Esse sistema não existe em mais lugar nenhum.
             </h2>
-            <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-8">
-              Entre com Discord, compre seu plano e rode a primeira campanha pelo painel.
+            <p className="text-base md:text-xl text-muted-foreground leading-relaxed">
+              Discord Ads é raro. Quem entra agora pega o canal limpo, audiência fria e custo baixo — antes do mercado descobrir.
+            </p>
+
+            <div className="grid sm:grid-cols-3 gap-3 mt-10">
+              {[
+                { icon: Zap, label: "Plataforma 24h no ar" },
+                { icon: ShieldCheck, label: "Saldo separado por conta" },
+                { icon: Flame, label: "Único no mercado" },
+              ].map((c) => (
+                <div key={c.label} className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-4">
+                  <c.icon className="h-5 w-5 text-primary shrink-0" />
+                  <span className="text-sm font-semibold text-foreground/80 text-left">{c.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA FINAL */}
+        <section className="py-16 md:py-28">
+          <div className="container mx-auto px-4 max-w-4xl text-center">
+            <h2 className="font-display text-3xl md:text-6xl font-black leading-[0.95] mb-5">
+              Enquanto você lê, alguém tá lançando ads pra <span className="text-primary">sua audiência</span>.
+            </h2>
+            <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+              Conecta o Discord, escolhe o plano e dispara a primeira campanha em minutos.
             </p>
             <button
               onClick={connectDiscord}
               disabled={busy}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 h-14 md:h-16 px-6 md:px-10 rounded-lg bg-primary text-primary-foreground font-black text-sm md:text-base uppercase tracking-normal transition-colors hover:bg-primary/90 disabled:opacity-50"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 h-14 md:h-16 px-6 md:px-10 rounded-lg bg-primary text-primary-foreground font-black text-sm md:text-base uppercase tracking-wider transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
               {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <DiscordIcon className="h-6 w-6" />}
-              Conectar com Discord
+              Quero meu Discord Ads
               <ArrowRight className="h-6 w-6" />
             </button>
           </div>
@@ -288,7 +374,7 @@ const Landing = () => {
             <Rocket className="h-4 w-4 text-primary" />
             <span className="font-display font-black tracking-normal">SERVER<span className="text-primary">BOOST</span></span>
           </div>
-          <span>© {new Date().getFullYear()} ServerBoost — Todos os direitos reservados</span>
+          <span>© {new Date().getFullYear()} ServerBoost — Discord Ads. Todos os direitos reservados.</span>
         </div>
       </footer>
 
