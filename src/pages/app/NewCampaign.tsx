@@ -192,11 +192,11 @@ const NewCampaign = () => {
   }
 
   return (
-    <div className="grid lg:grid-cols-[1fr,420px] gap-6 max-w-[1400px]">
-      <div className="space-y-5">
+    <div className="grid lg:grid-cols-[1fr,420px] gap-4 md:gap-6 max-w-[1400px]">
+      <div className="space-y-5 min-w-0">
         {/* HEADER + STEPPER */}
         <div>
-          <h1 className="text-2xl font-black mb-1">{isEdit ? "Editar campanha" : "Criar nova campanha"}</h1>
+          <h1 className="text-xl md:text-2xl font-black mb-1">{isEdit ? "Editar campanha" : "Criar nova campanha"}</h1>
           <p className="text-sm text-muted-foreground mb-4">Siga as 3 etapas pra disparar sua divulgação.</p>
           <div className="flex items-center gap-2">
             {STEPS.map((s, i) => {
@@ -204,12 +204,12 @@ const NewCampaign = () => {
               const active = step === s.id;
               const done = step > s.id;
               return (
-                <div key={s.id} className="flex items-center gap-2 flex-1">
+                <div key={s.id} className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
                   <button
                     type="button"
                     onClick={() => (s.id < step || (s.id === 2 && validateStep1())) && setStep(s.id)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition flex-1 ${
-                      active ? "border-primary bg-primary/15 shadow-glow"
+                    className={`flex items-center gap-2 px-2 sm:px-3 py-2 rounded-xl border-2 transition flex-1 min-w-0 ${
+                      active ? "border-primary bg-primary/10 shadow-glow"
                       : done ? "border-success/40 bg-success/5"
                       : "border-border bg-card hover:border-border/80"
                     }`}
@@ -225,9 +225,9 @@ const NewCampaign = () => {
                       <div className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none">Etapa {s.id}</div>
                       <div className="text-sm font-bold truncate">{s.label}</div>
                     </div>
-                    <div className="text-sm font-bold sm:hidden">{s.label}</div>
+                    <div className="text-xs font-bold sm:hidden truncate">{s.label}</div>
                   </button>
-                  {i < STEPS.length - 1 && <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
+                  {i < STEPS.length - 1 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
                 </div>
               );
             })}
@@ -428,28 +428,28 @@ const NewCampaign = () => {
         )}
 
         {/* NAV */}
-        <div className="sticky bottom-2 z-10 rounded-2xl bg-card/95 backdrop-blur border border-border p-3 shadow-card">
-          <div className="flex gap-2">
+        <div className="sticky bottom-2 z-10 rounded-2xl bg-card/95 backdrop-blur border border-border p-2.5 sm:p-3 shadow-card">
+          <div className="flex flex-wrap gap-2">
             {step > 1 && (
-              <Button type="button" variant="outline" onClick={() => setStep((s) => s - 1)} className="gap-2">
-                <ChevronLeft className="h-4 w-4" /> Voltar
+              <Button type="button" variant="outline" size="sm" onClick={() => setStep((s) => s - 1)} className="gap-1.5 sm:gap-2">
+                <ChevronLeft className="h-4 w-4" /> <span className="hidden xs:inline">Voltar</span>
               </Button>
             )}
-            <Button type="button" variant="ghost" onClick={() => save("draft")} disabled={busy} className="gap-2">
-              <Save className="h-4 w-4" /> Salvar rascunho
+            <Button type="button" variant="ghost" size="sm" onClick={() => save("draft")} disabled={busy} className="gap-1.5 sm:gap-2">
+              <Save className="h-4 w-4" /> <span className="hidden sm:inline">Salvar rascunho</span><span className="sm:hidden">Rascunho</span>
             </Button>
             <div className="flex-1" />
             {step < 3 ? (
-              <Button type="button" variant="discord" onClick={goNext} className="gap-2">
+              <Button type="button" variant="discord" size="sm" onClick={goNext} className="gap-1.5 sm:gap-2 ml-auto">
                 Continuar <ChevronRight className="h-4 w-4" />
               </Button>
             ) : (
               <>
-                <Button type="button" variant="outline" onClick={sendTest} disabled={testing || !message.trim()} className="gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={sendTest} disabled={testing || !message.trim()} className="gap-1.5 sm:gap-2">
                   {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FlaskConical className="h-4 w-4" />} Testar
                 </Button>
-                <Button type="button" variant="discord" onClick={() => save("send")} disabled={busy || myCoins < cost} className="gap-2">
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Disparar agora
+                <Button type="button" variant="discord" size="sm" onClick={() => save("send")} disabled={busy || myCoins < cost} className="gap-1.5 sm:gap-2">
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} <span className="hidden sm:inline">Disparar agora</span><span className="sm:hidden">Disparar</span>
                 </Button>
               </>
             )}
