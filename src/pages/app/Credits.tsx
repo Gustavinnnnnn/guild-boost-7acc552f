@@ -81,59 +81,53 @@ const callPaymentFunction = async <T,>(functionName: string, payload: Record<str
 const Credits = () => {
   const [busy, setBusy] = useState<PlanKey | null>(null);
   const [open, setOpen] = useState(false);
-  const [pix, setPix] = useState<{ code: string; ref: string; qr?: string; coins: number; price: string; planName: string } | null>(null);
+  const [pix, setPix] = useState<PixState | null>(null);
   const [checking, setChecking] = useState(false);
   const [paid, setPaid] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [paymentNotice, setPaymentNotice] = useState<string | null>(null);
 
   const buy = async (planKey: PlanKey) => {
     setBusy(planKey);
     const planMeta = PLANS.find((p) => p.key === planKey)!;
     try {
-      // Garante sessão fresca antes de chamar a função (evita 401 por token expirado)
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        toast.error("Sessão expirada. Entre novamente.");
-        window.location.href = "/auth";
-        return;
-      }
-      // Refresh proativo se faltar pouco para expirar
-      const expSec = sessionData.session.expires_at ?? 0;
-      if (expSec * 1000 - Date.now() < 60_000) {
-        await supabase.auth.refreshSession();
-      }
+      const data = await callPaymentFunction<{
+        success?: boolean;
+        message?: string;
+        qr_code?: string;
+        reference?: string;
+        qr_code_base64?: string;
+        coins?: number;
+        expires_at?: string | null;
+      }>("create-pix-deposit", { plan: planKey });
 
-      const { data, error } = await supabase.functions.invoke("create-pix-deposit", { body: { plan: planKey } });
-
-      if (error) {
-        console.error("create-pix-deposit error:", error);
-        const msg = (error as any)?.message || "";
-        if (msg.includes("401") || msg.toLowerCase().includes("unauth")) {
-          toast.error("Sessão expirada. Entre novamente.");
-          window.location.href = "/auth";
-          return;
-        }
-        toast.error("Erro ao gerar PIX. Tenta de novo em alguns segundos.");
-        return;
-      }
       if (!data?.success) {
         toast.error(data?.message || "Não foi possível gerar o PIX agora.");
         return;
       }
+      const qrCode = data.qr_code || "";
       setPix({
-        code: data.qr_code,
-        ref: data.reference,
+        code: qrCode,
+        ref: data.reference || "",
         qr: data.qr_code_base64,
-        coins: data.coins,
+        coins: data.coins || planMeta.dms,
         price: planMeta.price,
         planName: planMeta.name,
+        expiresAt: data.expires_at,
       });
       setPaid(false);
       setCopied(false);
+      setPaymentNotice(null);
       setOpen(true);
     } catch (e) {
       console.error(e);
-      toast.error("Erro inesperado. Tenta de novo.");
+      const msg = e instanceof Error ? e.message : "";
+      if (msg.includes("auth") || msg.includes("Unauthorized") || msg.includes("401")) {
+        toast.error("Sessão expirada. Entre novamente.");
+        window.location.href = "/auth";
+        return;
+      }
+      toast.error("Erro ao gerar PIX. Tenta de novo em alguns segundos.");
     } finally {
       setBusy(null);
     }
@@ -150,6 +144,19 @@ const Credits = () => {
       toast.error("Não consegui copiar. Selecione e copie manualmente.");
     }
   };
+
+  useEffect(() => {
+    if (!pix?.code || pix.qrDataUrl || pix.qr) return;
+    let cancelled = false;
+    QRCode.toDataURL(pix.code, { width: 320, margin: 1, errorCorrectionLevel: "M", color: { dark: "#05070d", light: "#ffffff" } })
+      .then((url) => {
+        if (!cancelled) setPix((current) => current?.ref === pix.ref ? { ...current, qrDataUrl: url } : current);
+      })
+      .catch(() => {
+        if (!cancelled) setPaymentNotice("O QR visual não carregou, mas o código copia e cola abaixo continua válido.");
+      });
+    return () => { cancelled = true; };
+  }, [pix?.code, pix?.qr, pix?.qrDataUrl, pix?.ref]);
 
   // Polling de pagamento
   useEffect(() => {
