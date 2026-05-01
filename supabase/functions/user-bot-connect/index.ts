@@ -69,6 +69,8 @@ Deno.serve(async (req) => {
       bot_id: me.id,
       bot_username: `${me.username}${me.discriminator && me.discriminator !== "0" ? "#" + me.discriminator : ""}`,
       bot_avatar_url: botAvatar,
+      access_paid: true,
+      access_paid_at: new Date().toISOString(),
     };
     let bot;
     if (existing) {
