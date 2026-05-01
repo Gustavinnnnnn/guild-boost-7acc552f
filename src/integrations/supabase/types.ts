@@ -392,6 +392,7 @@ export type Database = {
           target_category: string | null
           target_count: number
           target_niches: string[]
+          target_server: Json | null
           title: string
           total_clicks: number
           total_delivered: number
@@ -420,6 +421,7 @@ export type Database = {
           target_category?: string | null
           target_count?: number
           target_niches?: string[]
+          target_server?: Json | null
           title?: string
           total_clicks?: number
           total_delivered?: number
@@ -448,6 +450,7 @@ export type Database = {
           target_category?: string | null
           target_count?: number
           target_niches?: string[]
+          target_server?: Json | null
           title?: string
           total_clicks?: number
           total_delivered?: number
