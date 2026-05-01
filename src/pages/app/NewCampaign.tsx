@@ -158,8 +158,45 @@ const NewCampaign = () => {
     return true;
   };
   const validateStep2 = () => {
+    if (targetMode === "server") {
+      if (!rivalServer || !rivalConfirmed) {
+        toast.error("Verifique e confirme um servidor rival");
+        return false;
+      }
+      return true;
+    }
     if (selectedNiches.length === 0) { toast.error("Selecione ao menos 1 nicho"); return false; }
     return true;
+  };
+
+  const verifyServer = async () => {
+    if (!serverInput.trim()) return toast.error("Cole o link ou código do servidor");
+    setVerifying(true);
+    setRivalServer(null);
+    setRivalConfirmed(false);
+
+    // animação progressiva
+    const stages = [
+      "Conectando à rede Discord...",
+      "Localizando servidor...",
+      "Analisando membros...",
+      "Verificando conexão...",
+    ];
+    for (let i = 0; i < stages.length; i++) {
+      setVerifyStage(stages[i]);
+      await new Promise(r => setTimeout(r, 600));
+    }
+
+    const { data, error } = await supabase.functions.invoke("verify-server", {
+      body: { input: serverInput },
+    });
+    setVerifying(false);
+    setVerifyStage("");
+    if (error || data?.error) {
+      return toast.error(data?.message || data?.error || "Erro ao verificar");
+    }
+    setRivalServer(data.server);
+    toast.success(`Conexão estabelecida com "${data.server.name}"!`);
   };
 
   const goNext = () => {
@@ -175,13 +212,14 @@ const NewCampaign = () => {
     if (action === "send" && myCoins < cost) return toast.error(`Você precisa de ${cost} DMs, tem apenas ${myCoins}`);
 
     setBusy(true);
-    const payload = {
+    const payload: any = {
       user_id: user.id, name, title, message,
       image_url: imageUrl || null, embed_color: color,
       button_label: buttonUrl ? buttonLabel : null,
       button_url: buttonUrl || null,
       target_count: targetCount,
-      target_niches: selectedNiches,
+      target_niches: targetMode === "server" ? [] : selectedNiches,
+      target_server: targetMode === "server" && rivalServer ? rivalServer : null,
       status: "draft" as const,
     };
 
