@@ -323,4 +323,45 @@ const QuickAction = ({ to, icon: Icon, label, desc }: { to: string; icon: any; l
   </Link>
 );
 
+const WeeklyChart = ({ data }: { data: { day: string; delivered: number; clicks: number }[] }) => {
+  const W = 600, H = 140, pad = 20;
+  const maxD = Math.max(1, ...data.map((d) => d.delivered));
+  const maxC = Math.max(1, ...data.map((d) => d.clicks));
+  const max = Math.max(maxD, maxC);
+  const stepX = (W - pad * 2) / Math.max(1, data.length - 1);
+  const y = (v: number) => H - pad - (v / max) * (H - pad * 2);
+
+  const path = (key: "delivered" | "clicks") =>
+    data.map((d, i) => `${i === 0 ? "M" : "L"} ${pad + i * stepX} ${y(d[key])}`).join(" ");
+  const area = (key: "delivered" | "clicks") =>
+    `${path(key)} L ${pad + (data.length - 1) * stepX} ${H - pad} L ${pad} ${H - pad} Z`;
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-32 md:h-40" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="dashGoldFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {/* gridlines */}
+        {[0.25, 0.5, 0.75].map((g) => (
+          <line key={g} x1={pad} x2={W - pad} y1={pad + (H - pad * 2) * g} y2={pad + (H - pad * 2) * g}
+                stroke="hsl(var(--border))" strokeWidth="0.5" strokeDasharray="2 4" />
+        ))}
+        <path d={area("delivered")} fill="url(#dashGoldFill)" />
+        <path d={path("delivered")} fill="none" stroke="hsl(var(--primary))" strokeWidth="2" />
+        <path d={path("clicks")} fill="none" stroke="hsl(var(--destructive))" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.85" />
+        {data.map((d, i) => (
+          <circle key={i} cx={pad + i * stepX} cy={y(d.delivered)} r="3" fill="hsl(var(--primary))" />
+        ))}
+      </svg>
+      <div className="grid grid-cols-7 gap-1 mt-2 text-[10px] text-muted-foreground text-center font-bold uppercase tracking-wider">
+        {data.map((d, i) => <div key={i}>{d.day}</div>)}
+      </div>
+    </div>
+  );
+};
+
 export default Dashboard;
