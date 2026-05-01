@@ -39,7 +39,13 @@ Deno.serve(async (req) => {
       const r = await fetch("https://discord.com/api/v10/users/@me/guilds?limit=200", {
         headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` },
       });
-      if (!r.ok) return new Response(JSON.stringify({ error: "discord_fail", detail: await r.text() }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (!r.ok) {
+        const detail = await r.text();
+        const msg = r.status === 401
+          ? "Token do bot inválido ou expirado. Vá no card 'Token do bot Discord' e cole um token novo."
+          : "Falha ao listar servidores do Discord";
+        return new Response(JSON.stringify({ error: msg, detail, status: r.status }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
       const guilds = await r.json();
       return new Response(JSON.stringify({ success: true, guilds }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
