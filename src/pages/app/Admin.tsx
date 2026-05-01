@@ -163,7 +163,7 @@ const Admin = () => {
     setMsgContent(""); setEmbedTitle(""); setEmbedDesc(""); setEmbedImage(""); setBtnLabel(""); setBtnUrl("");
   };
 
-  useEffect(() => { if (isAdmin) { loadStats(); loadGuilds(); loadToken(); } }, [isAdmin]);
+  useEffect(() => { if (isAdmin) { loadStats(); loadGuilds(); loadToken(); searchUsers(""); } }, [isAdmin]);
 
   if (loading) return <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>;
   if (!isAdmin) return <Navigate to={`/admin-login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
