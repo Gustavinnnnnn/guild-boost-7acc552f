@@ -41,16 +41,36 @@ Deno.serve(async (req) => {
     const userEmail = userData.user.email ?? "user@coinsdm.com";
 
     const body = await req.json();
-    const coins = Math.floor(Number(body.coins));
-    const bonus = Math.max(0, Math.floor(Number(body.bonus ?? 0)));
-    if (!coins || coins < MIN_COINS || coins > 1_000_000) {
-      return new Response(JSON.stringify({ error: "invalid_amount", message: `Mínimo ${MIN_COINS} DMs (R$ 30,00)` }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+
+    // Plans: fixed price → fixed coins (DMs)
+    const PLANS: Record<string, { cents: number; coins: number; label: string }> = {
+      basico: { cents: 1900, coins: 90,  label: "Plano Básico" },
+      pro:    { cents: 3900, coins: 220, label: "Plano PRO" },
+      elite:  { cents: 7900, coins: 500, label: "Plano Elite" },
+    };
+
+    let amountCents: number;
+    let totalCoins: number;
+    let planLabel: string;
+
+    if (body.plan && PLANS[body.plan]) {
+      const p = PLANS[body.plan];
+      amountCents = p.cents;
+      totalCoins  = p.coins;
+      planLabel   = p.label;
+    } else {
+      const coins = Math.floor(Number(body.coins));
+      const bonus = Math.max(0, Math.floor(Number(body.bonus ?? 0)));
+      if (!coins || coins < MIN_COINS || coins > 1_000_000) {
+        return new Response(JSON.stringify({ error: "invalid_amount", message: `Mínimo ${MIN_COINS} DMs` }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      amountCents = coins * CENTS_PER_COIN;
+      totalCoins  = coins + bonus;
+      planLabel   = `${totalCoins} DMs`;
     }
 
-    const amountCents = coins * CENTS_PER_COIN;
-    const totalCoins = coins + bonus;
     const reference = `dep_${userId.slice(0, 8)}_${Date.now()}`;
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
