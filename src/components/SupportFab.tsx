@@ -6,7 +6,7 @@ import supportMascot from "@/assets/support-mascot.png";
 const DISCORD_URL = "https://discord.gg/YBWcN4EddG";
 const WHATSAPP_URL =
   "https://wa.me/5514981858164?text=" +
-  encodeURIComponent("Olá! Preciso de ajuda com o ServerBoost.");
+  encodeURIComponent("Olá! Preciso de ajuda com o DMFlow.");
 
 export const SupportFab = () => {
   const [open, setOpen] = useState(false);

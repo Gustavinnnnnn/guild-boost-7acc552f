@@ -20,7 +20,7 @@ const AdminLogin = forwardRef<HTMLDivElement>((_, ref) => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    document.title = "Login Admin | ServerBoost";
+    document.title = "Login Admin | DMFlow";
   }, []);
 
   if (!authLoading && !profileLoading && user && isAdmin) {
@@ -58,7 +58,7 @@ const AdminLogin = forwardRef<HTMLDivElement>((_, ref) => {
     <main ref={ref} className="min-h-screen bg-background text-foreground grid place-items-center p-4">
       <section className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-card">
         <div className="mb-6 text-center">
-          <img src={logo} alt="ServerBoost" className="mx-auto mb-4 h-16 w-16 rounded-lg object-cover shadow-glow" />
+          <img src={logo} alt="DMFlow" className="mx-auto mb-4 h-16 w-16 rounded-lg object-cover shadow-glow" />
           <div className="mx-auto mb-3 inline-flex items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-black uppercase tracking-widest text-primary">
             <ShieldCheck className="h-4 w-4" /> Admin
           </div>

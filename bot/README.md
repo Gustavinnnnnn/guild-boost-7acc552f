@@ -1,6 +1,6 @@
 # 🤖 CoinsDM — Bot Discord
 
-Bot oficial do CoinsDM/ServerBoost. Os usuários compram DMs, criam campanhas e veem métricas direto pelo Discord.
+Bot oficial do CoinsDM/DMFlow. Os usuários compram DMs, criam campanhas e veem métricas direto pelo Discord.
 
 ## 📋 Comandos
 

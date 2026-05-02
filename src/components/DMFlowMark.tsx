@@ -15,10 +15,10 @@ const SIZES = {
 };
 
 /**
- * Logo / mark oficial do ServerBoost.
+ * Logo / mark oficial do DMFlow.
  * Use como wordmark completo ou apenas o ícone (showWordmark={false}).
  */
-export const ServerBoostMark = ({ size = "md", showWordmark = true, className }: Props) => {
+export const DMFlowMark = ({ size = "md", showWordmark = true, className }: Props) => {
   const s = SIZES[size];
   return (
     <div className={cn("flex items-center gap-2.5", className)}>
@@ -33,7 +33,7 @@ export const ServerBoostMark = ({ size = "md", showWordmark = true, className }:
       </div>
       {showWordmark && (
         <span className={cn(s.text, "font-display font-black tracking-tight leading-none")}>
-          SERVER<span className="text-primary">BOOST</span>
+          DM<span className="text-primary">FLOW</span>
         </span>
       )}
     </div>

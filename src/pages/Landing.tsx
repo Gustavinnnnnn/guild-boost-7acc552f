@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useInView, useScroll, useTransform, useMotionValue, useSpring, animate, type Variants } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-// (DiscordIcon removido — ServerBoost usa identidade própria)
+// (DiscordIcon removido — DMFlow usa identidade própria)
 import { SupportFab } from "@/components/SupportFab";
 import { toast } from "sonner";
 import {
@@ -627,7 +627,7 @@ const Landing = () => {
                 className="rounded-2xl border-2 border-primary bg-primary/5 p-6 md:p-7 relative shadow-[0_20px_60px_-20px_hsl(var(--primary)/0.4)]"
               >
                 <span className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-wider shadow-lg shadow-primary/40">
-                  ServerBoost
+                  DMFlow
                 </span>
                 <div className="text-[10px] uppercase tracking-wider text-primary font-black mb-3">Discord Ads</div>
                 <div className="font-display text-2xl font-black mb-5">Entrega na DM</div>
@@ -784,7 +784,7 @@ const Landing = () => {
               SERVER<span className="text-primary">BOOST</span>
             </span>
           </div>
-          <span>© {new Date().getFullYear()} ServerBoost — Discord Ads. Todos os direitos reservados.</span>
+          <span>© {new Date().getFullYear()} DMFlow — Discord Ads. Todos os direitos reservados.</span>
         </div>
       </footer>
 
