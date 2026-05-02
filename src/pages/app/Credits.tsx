@@ -244,7 +244,7 @@ const Credits = () => {
                     <div className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Investimento</div>
                     <div className="flex items-baseline gap-1 mt-1">
                       <span className="text-sm text-muted-foreground">R$</span>
-                      <span className={`text-5xl font-black leading-none ${p.highlight ? "text-primary" : "text-foreground"}`}>{p.price}</span>
+                      <span className={`text-4xl font-black leading-none tracking-tight ${p.highlight ? "text-primary" : "text-foreground"}`}>{p.price}</span>
                     </div>
                   </div>
                   <div className="text-right">
