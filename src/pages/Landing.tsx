@@ -76,7 +76,7 @@ const AnimatedNumber = ({ value, duration = 1.6, format = (n: number) => Math.ro
 
   useEffect(() => {
     if (!inView) return;
-    const controls = animate(mv, value, { duration, ease: [0.22, 1, 0.36, 1] });
+    const controls = animate(mv, value, { duration, ease: EASE as any });
     const unsub = mv.on("change", (v) => setDisplay(format(v)));
     return () => {
       controls.stop();
@@ -258,7 +258,7 @@ const Landing = () => {
                     <motion.span
                       initial={{ scaleX: 0 }}
                       animate={{ scaleX: 1 }}
-                      transition={{ duration: 0.8, delay: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                      transition={{ duration: 0.8, delay: 0.9, ease: EASE as any }}
                       className="absolute left-0 -bottom-1 h-[6px] md:h-[10px] w-full bg-primary/30 origin-left rounded-full"
                     />
                   </span>{" "}
@@ -326,7 +326,7 @@ const Landing = () => {
               initial={{ opacity: 0, y: 40, scale: 0.97 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.8, ease: EASE as any }}
               className="mt-14 md:mt-20 max-w-4xl mx-auto relative"
             >
               {/* Glow under panel */}
@@ -401,7 +401,7 @@ const Landing = () => {
                       initial={{ width: 0 }}
                       whileInView={{ width: "65%" }}
                       viewport={{ once: true }}
-                      transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1], delay: 0.4 }}
+                      transition={{ duration: 1.6, ease: EASE as any, delay: 0.4 }}
                       className="h-full rounded-full bg-gradient-to-r from-primary to-primary-glow relative overflow-hidden"
                     >
                       <motion.div
