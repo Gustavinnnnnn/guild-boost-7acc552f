@@ -341,6 +341,73 @@ export default function MyBot() {
     );
   }
 
+  // ===== ETAPA 2.5: PAYWALL R$10 =====
+  if (!bot.access_paid) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <Card className="p-5 bg-gradient-to-r from-success/10 to-success/5 border-success/30">
+          <div className="flex items-center gap-3">
+            {bot.bot_avatar_url && <img src={bot.bot_avatar_url} className="h-12 w-12 rounded-full" />}
+            <div className="flex-1 min-w-0">
+              <div className="text-xs text-muted-foreground">Bot e servidor prontos</div>
+              <div className="font-bold truncate">{bot.bot_username} · {bot.guild_name}</div>
+            </div>
+            <CheckCircle2 className="h-6 w-6 text-success shrink-0" />
+          </div>
+        </Card>
+
+        <Card className="p-6 md:p-8 bg-gradient-to-br from-primary/15 via-card to-card border-primary/40 shadow-glow space-y-5">
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning/15 border border-warning/30 text-warning text-[10px] uppercase tracking-widest font-black">
+              <Sparkles className="h-3 w-3" /> Acesso vitalício
+            </div>
+            <h1 className="text-3xl md:text-4xl font-black">Libere o sistema por <span className="text-primary">R$ 10,00</span></h1>
+            <p className="text-sm text-muted-foreground">Pagamento único via PIX. Sem mensalidade, sem taxas escondidas.</p>
+          </div>
+
+          <ul className="space-y-2 text-sm">
+            {[
+              "Disparos ilimitados de DM pra todos os membros do seu servidor",
+              "Até 3 broadcasts por dia (resetam todo dia)",
+              "Imagem, botão de ação e título personalizados",
+              "Dashboard com entregas, falhas e cliques em tempo real",
+            ].map((t, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <CheckCircle2 className="h-4 w-4 text-success mt-0.5 shrink-0" />
+                <span>{t}</span>
+              </li>
+            ))}
+          </ul>
+
+          {!pix ? (
+            <Button onClick={createPayment} disabled={creatingPix} variant="discord" className="w-full h-12 text-base">
+              {creatingPix ? <><Loader2 className="h-4 w-4 animate-spin" /> Gerando PIX...</> : <><Zap className="h-4 w-4" /> Gerar PIX de R$ 10,00</>}
+            </Button>
+          ) : (
+            <div className="space-y-3">
+              {pix.qr_code_base64 && (
+                <div className="flex justify-center bg-white p-3 rounded-xl">
+                  <img src={`data:image/png;base64,${pix.qr_code_base64}`} alt="QR Code PIX" className="h-56 w-56" />
+                </div>
+              )}
+              <div>
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">PIX copia e cola</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input value={pix.pix_code} readOnly className="font-mono text-xs" />
+                  <Button onClick={() => { navigator.clipboard.writeText(pix.pix_code); toast.success("Código copiado!"); }} variant="outline">Copiar</Button>
+                </div>
+              </div>
+              <Button onClick={checkPayment} disabled={checkingPix} variant="discord" className="w-full">
+                {checkingPix ? <><Loader2 className="h-4 w-4 animate-spin" /> Verificando...</> : <>Já paguei, verificar</>}
+              </Button>
+              <p className="text-[11px] text-center text-muted-foreground">Verificamos automaticamente a cada 5 segundos.</p>
+            </div>
+          )}
+        </Card>
+      </div>
+    );
+  }
+
   // ===== ETAPA 3: Dashboard =====
   const broadcastsToday = broadcasts.filter(b =>
     new Date(b.created_at).getTime() > Date.now() - 24 * 60 * 60 * 1000
