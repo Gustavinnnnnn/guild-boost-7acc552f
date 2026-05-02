@@ -218,6 +218,10 @@ const Landing = () => {
             />
           </motion.div>
 
+          {/* Linha de luz no topo */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-[80%] bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 h-24 w-[60%] bg-gradient-to-b from-primary/15 to-transparent blur-2xl pointer-events-none" />
+
           <div className="container mx-auto px-4 py-14 md:py-28 relative">
             <div className="max-w-5xl mx-auto text-center">
               <motion.div
