@@ -265,8 +265,13 @@ const NewCampaign = () => {
     <div className="grid lg:grid-cols-[1fr,420px] gap-4 md:gap-6 max-w-[1400px]">
       <div className="space-y-5 min-w-0">
         {/* HEADER + STEPPER */}
-        <div>
-          <h1 className="text-xl md:text-2xl font-black mb-1">{isEdit ? "Editar campanha" : "Criar nova campanha"}</h1>
+         <div>
+          <div className="flex items-start justify-between gap-3 mb-1">
+            <h1 className="text-xl md:text-2xl font-black">{isEdit ? "Editar campanha" : "Criar nova campanha"}</h1>
+            <Button asChild variant="outline" size="sm" className="gap-1.5 shrink-0">
+              <a href="/app/ajuda"><Search className="h-3.5 w-3.5" /> Como funciona?</a>
+            </Button>
+          </div>
           <p className="text-sm text-muted-foreground mb-4">Siga as 3 etapas pra disparar sua divulgação.</p>
           <div className="flex items-center gap-2">
             {STEPS.map((s, i) => {

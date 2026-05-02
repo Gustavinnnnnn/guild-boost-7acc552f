@@ -156,11 +156,14 @@ export default function MyBot() {
             <h1 className="text-3xl md:text-4xl font-black tracking-tight">
               Conecte <span className="text-primary">seu bot</span>, divulgue pra todo seu servidor
             </h1>
-            <p className="text-sm md:text-base text-muted-foreground mt-3 max-w-2xl leading-relaxed">
+             <p className="text-sm md:text-base text-muted-foreground mt-3 max-w-2xl leading-relaxed">
               Coloque o token do <b>seu próprio bot Discord</b> aqui e dispare DMs em massa pra
               todos os membros do <b>seu servidor</b>. Sem comprar saldo, sem limite por dia
               (exceto 3 disparos/dia), <b>tudo seu</b>.
             </p>
+            <Button asChild variant="outline" size="sm" className="mt-4 gap-1.5">
+              <Link to="/app/ajuda"><HelpCircle className="h-4 w-4" /> Como funciona?</Link>
+            </Button>
           </div>
         </div>
 
@@ -311,7 +314,10 @@ export default function MyBot() {
               <Server className="h-3.5 w-3.5 shrink-0" /> {bot.guild_name} · <Users className="h-3.5 w-3.5 shrink-0" /> {fmt(bot.guild_member_count ?? 0)}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+           <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm" className="gap-1.5">
+              <Link to="/app/ajuda"><HelpCircle className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Ajuda</span></Link>
+            </Button>
             <Button onClick={switchGuild} variant="outline" size="sm" className="gap-1.5">
               <RefreshCw className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Trocar servidor</span>
             </Button>
