@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { ServerBoostMark } from "@/components/ServerBoostMark";
 import {
   Bot, KeyRound, CheckCircle2, Server, Send, Sparkles, Upload, X,
   TrendingUp, MessageCircle, AlertCircle, Loader2, Users, Flame, Target, Zap, Clock,
