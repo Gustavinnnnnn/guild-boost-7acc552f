@@ -18,8 +18,10 @@ import MyServers from "./pages/app/MyServers";
 import MyBot from "./pages/app/MyBot";
 import MyAccount from "./pages/app/MyAccount";
 import HowToGetToken from "./pages/app/HowToGetToken";
+import Help from "./pages/app/Help";
 import Admin from "./pages/app/Admin";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminOnly from "./components/AdminOnly";
 
 const queryClient = new QueryClient();
 
