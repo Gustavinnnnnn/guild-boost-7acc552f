@@ -19,6 +19,7 @@ const baseNav = [
 
 const AppLayout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { profile, isAdmin } = useProfile();
 
   const nav = isAdmin
