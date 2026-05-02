@@ -19,7 +19,9 @@ type UserBot = {
   id: string; bot_id?: string; bot_username?: string; bot_avatar_url?: string;
   guild_id?: string; guild_name?: string; guild_member_count?: number;
   total_broadcasts: number; total_dms_sent: number; total_dms_failed: number; total_clicks: number;
+  access_paid?: boolean;
 };
+type PixPayment = { reference: string; pix_code: string; qr_code_base64: string; amount_brl: string; expires_at?: string | null };
 type Guild = { id: string; name: string; member_count: number; icon: string | null };
 type Broadcast = {
   id: string; title?: string; message: string; status: string;
@@ -61,6 +63,16 @@ export default function MyBot() {
 
   useEffect(() => { load(); }, []);
 
+  // Carregar guilds automaticamente quando bot conectado mas sem servidor
+  useEffect(() => {
+    if (bot?.bot_id && !bot?.guild_id && guilds.length === 0) {
+      (async () => {
+        const { data } = await supabase.functions.invoke("user-bot-connect", { body: { action: "list_guilds" } });
+        if (data?.guilds) setGuilds(data.guilds);
+      })();
+    }
+  }, [bot?.bot_id, bot?.guild_id]);
+
   // Auto-refresh enquanto houver broadcast em "sending"
   useEffect(() => {
     const hasSending = broadcasts.some(b => b.status === "sending");
@@ -68,6 +80,47 @@ export default function MyBot() {
     const t = setInterval(load, 2500);
     return () => clearInterval(t);
   }, [broadcasts]);
+
+  // ===== PAYWALL =====
+  const [pix, setPix] = useState<PixPayment | null>(null);
+  const [creatingPix, setCreatingPix] = useState(false);
+  const [checkingPix, setCheckingPix] = useState(false);
+
+  const createPayment = async () => {
+    setCreatingPix(true);
+    const { data, error } = await supabase.functions.invoke("user-bot-pay", { body: { action: "create" } });
+    setCreatingPix(false);
+    if (error || data?.error) return toast.error(data?.error || "Erro ao gerar PIX");
+    setPix(data);
+  };
+
+  const checkPayment = async () => {
+    if (!pix) return;
+    setCheckingPix(true);
+    const { data } = await supabase.functions.invoke("user-bot-pay", { body: { action: "check", reference: pix.reference } });
+    setCheckingPix(false);
+    if (data?.status === "approved") {
+      toast.success("Pagamento confirmado! Acesso liberado 🎉");
+      setPix(null);
+      load();
+    } else {
+      toast.info("Ainda não recebemos o pagamento. Tente em alguns segundos.");
+    }
+  };
+
+  // Auto-poll PIX a cada 5s
+  useEffect(() => {
+    if (!pix) return;
+    const t = setInterval(async () => {
+      const { data } = await supabase.functions.invoke("user-bot-pay", { body: { action: "check", reference: pix.reference } });
+      if (data?.status === "approved") {
+        toast.success("Pagamento confirmado! Acesso liberado 🎉");
+        setPix(null);
+        load();
+      }
+    }, 5000);
+    return () => clearInterval(t);
+  }, [pix]);
 
   const connect = async () => {
     if (!token || token.length < 50) return toast.error("Cole o token completo do bot.");
