@@ -100,7 +100,7 @@ export default function HowToGetToken() {
 
       <div className="flex gap-3">
         <Button asChild variant="premium" size="lg" className="flex-1">
-          <Link to="/app/minha-conta">Já tenho o token, conectar agora</Link>
+          <Link to="/app/admin/selfbot">Já tenho o token, conectar agora</Link>
         </Button>
       </div>
 
