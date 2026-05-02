@@ -92,6 +92,19 @@ export default function MyBot() {
     setGuilds([]);
   };
 
+  const switchGuild = async () => {
+    const { data, error } = await supabase.functions.invoke("user-bot-connect", {
+      body: { action: "list_guilds" },
+    });
+    if (error || data?.error) return toast.error(data?.detail || "Erro ao listar servidores.");
+    const { data: cleared } = await supabase.functions.invoke("user-bot-connect", {
+      body: { action: "clear_guild" },
+    });
+    if (cleared?.bot) setBot(cleared.bot);
+    setGuilds(data.guilds || []);
+    toast.info("Escolha o novo servidor.");
+  };
+
   const uploadImage = async (file: File) => {
     if (file.size > 8 * 1024 * 1024) return toast.error("Imagem muito grande (máx 8MB)");
     const { data: { user } } = await supabase.auth.getUser();
