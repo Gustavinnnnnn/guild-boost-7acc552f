@@ -567,18 +567,30 @@ const NewCampaign = () => {
               <div className="grid sm:grid-cols-2 gap-3 text-sm">
                 <Info label="Nome interno" value={name} />
                 <Info label="Título" value={title} />
-                <Info label="Nichos" value={`${selectedNiches.length} selecionado(s)`} />
+                <Info label="Alvo" value={targetMode === "server"
+                  ? (rivalServer?.name ? `Servidor: ${rivalServer.name}` : "Servidor rival")
+                  : `${selectedNiches.length} nicho(s)`} />
                 <Info label="Alcance" value={`${targetCount.toLocaleString("pt-BR")} pessoas`} />
                 <Info label="Custo" value={`${cost} DMs`} />
                 <Info label="Saldo após" value={formatCoins(Math.max(0, myCoins - cost))} />
               </div>
-              <div className="flex flex-wrap gap-1.5 pt-3 border-t border-border">
-                {selectedNiches.map((v) => {
-                  const n = findNiche(v);
-                  if (!n) return null;
-                  return <span key={v} className="text-[11px] px-2 py-1 rounded-md bg-primary/10 text-primary font-semibold">{n.emoji} {n.label}</span>;
-                })}
-              </div>
+              {targetMode === "server" && rivalServer ? (
+                <div className="flex items-center gap-3 pt-3 border-t border-border">
+                  {rivalServer.icon_url && <img src={rivalServer.icon_url} className="h-10 w-10 rounded-lg" />}
+                  <div className="min-w-0">
+                    <div className="font-bold truncate">{rivalServer.name}</div>
+                    <div className="text-xs text-muted-foreground">{rivalServer.approximate_member_count.toLocaleString("pt-BR")} membros</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-1.5 pt-3 border-t border-border">
+                  {selectedNiches.map((v) => {
+                    const n = findNiche(v);
+                    if (!n) return null;
+                    return <span key={v} className="text-[11px] px-2 py-1 rounded-md bg-primary/10 text-primary font-semibold">{n.emoji} {n.label}</span>;
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-primary-glow/10 border border-primary/30 p-4">
