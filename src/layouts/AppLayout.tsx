@@ -98,19 +98,56 @@ const AppLayout = () => {
         </div>
       </header>
 
-      <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8 overflow-x-hidden">
+      <main className="flex-1 p-4 md:p-8 pb-28 md:pb-8 overflow-x-hidden">
         <Outlet />
       </main>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border flex z-50">
-        {nav.map((n) => (
-          <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) =>
-            `flex-1 flex flex-col items-center gap-1 py-2.5 text-[10px] ${isActive ? "text-primary" : "text-muted-foreground"}`
-          }>
-            <n.icon className="h-5 w-5" />
-            {n.label.split(" ")[0]}
-          </NavLink>
-        ))}
+      {/* Mobile bottom nav — pill flutuante premium */}
+      <nav className="md:hidden fixed bottom-3 left-3 right-3 z-50">
+        <div className="relative rounded-2xl bg-card/85 backdrop-blur-xl border border-border/80 shadow-[0_10px_40px_-10px_hsl(0_0%_0%/0.7)] px-1.5 py-1.5">
+          <ul className="flex items-stretch justify-between gap-1">
+            {nav.map((n) => {
+              const active =
+                n.end ? location.pathname === n.to : location.pathname.startsWith(n.to);
+              return (
+                <li key={n.to} className="flex-1">
+                  <NavLink
+                    to={n.to}
+                    end={n.end}
+                    className="relative flex flex-col items-center justify-center gap-0.5 h-14 rounded-xl text-[10px] font-bold transition-colors"
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="bottom-nav-pill"
+                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                        className="absolute inset-0 rounded-xl bg-gradient-to-b from-primary/25 to-primary/10 border border-primary/40 shadow-[inset_0_1px_0_hsl(var(--primary)/0.3)]"
+                      />
+                    )}
+                    <span className={`relative z-10 transition-transform ${active ? "scale-110" : ""}`}>
+                      <n.icon
+                        className={`h-[22px] w-[22px] ${active ? "text-primary" : "text-muted-foreground"}`}
+                        strokeWidth={active ? 2.4 : 2}
+                      />
+                    </span>
+                    <span
+                      className={`relative z-10 leading-none tracking-tight ${
+                        active ? "text-primary" : "text-muted-foreground"
+                      }`}
+                    >
+                      {n.label}
+                    </span>
+                    {active && (
+                      <motion.span
+                        layoutId="bottom-nav-dot"
+                        className="absolute -bottom-0.5 h-1 w-1 rounded-full bg-primary"
+                      />
+                    )}
+                  </NavLink>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </nav>
     </div>
   );
