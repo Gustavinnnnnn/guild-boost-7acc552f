@@ -383,20 +383,53 @@ const NewCampaign = () => {
         {/* STEP 2 — PÚBLICO */}
         {step === 2 && (
           <div className="space-y-5">
-            {/* Toggle de modo */}
-            <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-card border border-border">
-              <button type="button" onClick={() => setTargetMode("niche")}
-                className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition ${
-                  targetMode === "niche" ? "bg-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:bg-secondary/50"
-                }`}>
-                <Target className="h-4 w-4" /> Por nicho
-              </button>
-              <button type="button" onClick={() => setTargetMode("server")}
-                className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition ${
-                  targetMode === "server" ? "bg-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:bg-secondary/50"
-                }`}>
-                <Server className="h-4 w-4" /> Servidor rival
-              </button>
+            {/* Toggle de modo — destaque grande */}
+            <div>
+              <div className="flex items-center justify-between mb-2 px-1">
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Como vai mirar?</Label>
+                <span className="text-[10px] font-bold text-primary">2 modos disponíveis</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1.5 rounded-2xl bg-card border border-border">
+                <button type="button" onClick={() => setTargetMode("niche")}
+                  className={`relative flex items-center gap-3 p-3 rounded-xl text-left transition-all ${
+                    targetMode === "niche" ? "bg-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:bg-secondary/50"
+                  }`}>
+                  <div className={`h-10 w-10 rounded-lg grid place-items-center shrink-0 ${
+                    targetMode === "niche" ? "bg-primary-foreground/20" : "bg-secondary"
+                  }`}>
+                    <Target className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-black text-sm leading-tight">Por nicho</div>
+                    <div className={`text-[10px] leading-tight mt-0.5 ${targetMode === "niche" ? "text-primary-foreground/80" : "text-muted-foreground/80"}`}>
+                      Atinge usuários de servidores do tema
+                    </div>
+                  </div>
+                </button>
+                <button type="button" onClick={() => setTargetMode("server")}
+                  className={`relative flex items-center gap-3 p-3 rounded-xl text-left transition-all ${
+                    targetMode === "server" ? "bg-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:bg-secondary/50 ring-1 ring-primary/40"
+                  }`}>
+                  <span className={`absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider shadow-lg ${
+                    targetMode === "server" ? "bg-warning text-warning-foreground" : "bg-primary text-primary-foreground animate-pulse"
+                  }`}>
+                    Novo
+                  </span>
+                  <div className={`h-10 w-10 rounded-lg grid place-items-center shrink-0 ${
+                    targetMode === "server" ? "bg-primary-foreground/20" : "bg-primary/15 text-primary"
+                  }`}>
+                    <Radar className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-black text-sm leading-tight flex items-center gap-1.5">
+                      Servidor rival
+                    </div>
+                    <div className={`text-[10px] leading-tight mt-0.5 ${targetMode === "server" ? "text-primary-foreground/80" : "text-muted-foreground/80"}`}>
+                      Ataca membros de um servidor específico
+                    </div>
+                  </div>
+                </button>
+              </div>
             </div>
 
             {targetMode === "niche" && (
