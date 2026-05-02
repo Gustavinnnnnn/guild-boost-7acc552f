@@ -11,9 +11,21 @@ import { Slider } from "@/components/ui/slider";
 import {
   ImageIcon, Loader2, Send, Save, X, Users, Coins, ExternalLink, Target,
   Check, FlaskConical, Wand2, ChevronLeft, ChevronRight, Eye, Upload, Search,
+  Server, ShieldCheck, Radar, Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CATEGORY_GROUPS, dmsToCoins, coinsToDms, findNiche, findGroupOfNiche, formatCoins } from "@/lib/ads";
+
+type RivalServer = {
+  id: string;
+  name: string;
+  icon_url: string | null;
+  banner_url?: string | null;
+  description: string | null;
+  approximate_member_count: number;
+  approximate_presence_count: number;
+  invite_code: string;
+};
 
 const COLORS = ["#5865F2", "#57F287", "#FEE75C", "#EB459E", "#ED4245", "#9B59B6", "#F47B67", "#00D9FF"];
 
@@ -47,6 +59,14 @@ const NewCampaign = () => {
   const [maxReach, setMaxReach] = useState(0);
   const [loadingEdit, setLoadingEdit] = useState(isEdit);
 
+  // Modo: por nicho OU por servidor rival
+  const [targetMode, setTargetMode] = useState<"niche" | "server">("niche");
+  const [serverInput, setServerInput] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [verifyStage, setVerifyStage] = useState<string>("");
+  const [rivalServer, setRivalServer] = useState<RivalServer | null>(null);
+  const [rivalConfirmed, setRivalConfirmed] = useState(false);
+
   // Carrega campanha em modo edição
   useEffect(() => {
     if (!isEdit || !user) return;
@@ -63,11 +83,21 @@ const NewCampaign = () => {
       setButtonUrl(data.button_url || "");
       setSelectedNiches((data as any).target_niches || []);
       setTargetCount(data.target_count || 500);
+      const ts = (data as any).target_server;
+      if (ts && ts.id) {
+        setRivalServer(ts);
+        setRivalConfirmed(true);
+        setTargetMode("server");
+      }
       setLoadingEdit(false);
     })();
   }, [editId, isEdit, user]);
 
   useEffect(() => {
+    if (targetMode === "server") {
+      setMaxReach(rivalServer?.approximate_member_count ?? 0);
+      return;
+    }
     let q = supabase.from("discord_servers").select("member_count, niche").eq("bot_in_server", true);
     q.then(({ data }) => {
       const filtered = (data ?? []).filter((s: any) =>
@@ -76,7 +106,7 @@ const NewCampaign = () => {
       const total = filtered.reduce((sum, x: any) => sum + (x.member_count || 0), 0);
       setMaxReach(total);
     });
-  }, [selectedNiches]);
+  }, [selectedNiches, targetMode, rivalServer]);
 
   const cost = useMemo(() => dmsToCoins(targetCount), [targetCount]);
   const myCoins = profile?.credits ?? 0;
@@ -132,8 +162,45 @@ const NewCampaign = () => {
     return true;
   };
   const validateStep2 = () => {
+    if (targetMode === "server") {
+      if (!rivalServer || !rivalConfirmed) {
+        toast.error("Verifique e confirme um servidor rival");
+        return false;
+      }
+      return true;
+    }
     if (selectedNiches.length === 0) { toast.error("Selecione ao menos 1 nicho"); return false; }
     return true;
+  };
+
+  const verifyServer = async () => {
+    if (!serverInput.trim()) return toast.error("Cole o link ou código do servidor");
+    setVerifying(true);
+    setRivalServer(null);
+    setRivalConfirmed(false);
+
+    // animação progressiva
+    const stages = [
+      "Conectando à rede Discord...",
+      "Localizando servidor...",
+      "Analisando membros...",
+      "Verificando conexão...",
+    ];
+    for (let i = 0; i < stages.length; i++) {
+      setVerifyStage(stages[i]);
+      await new Promise(r => setTimeout(r, 600));
+    }
+
+    const { data, error } = await supabase.functions.invoke("verify-server", {
+      body: { input: serverInput },
+    });
+    setVerifying(false);
+    setVerifyStage("");
+    if (error || data?.error) {
+      return toast.error(data?.message || data?.error || "Erro ao verificar");
+    }
+    setRivalServer(data.server);
+    toast.success(`Conexão estabelecida com "${data.server.name}"!`);
   };
 
   const goNext = () => {
@@ -149,13 +216,14 @@ const NewCampaign = () => {
     if (action === "send" && myCoins < cost) return toast.error(`Você precisa de ${cost} DMs, tem apenas ${myCoins}`);
 
     setBusy(true);
-    const payload = {
+    const payload: any = {
       user_id: user.id, name, title, message,
       image_url: imageUrl || null, embed_color: color,
       button_label: buttonUrl ? buttonLabel : null,
       button_url: buttonUrl || null,
       target_count: targetCount,
-      target_niches: selectedNiches,
+      target_niches: targetMode === "server" ? [] : selectedNiches,
+      target_server: targetMode === "server" && rivalServer ? rivalServer : null,
       status: "draft" as const,
     };
 
@@ -315,55 +383,150 @@ const NewCampaign = () => {
         {/* STEP 2 — PÚBLICO */}
         {step === 2 && (
           <div className="space-y-5">
-            <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="font-bold flex items-center gap-2"><Target className="h-4 w-4 text-primary" /> Escolha o nicho</h2>
-                <span className="text-xs px-2 py-1 rounded-full bg-primary/15 font-bold text-primary">
-                  {selectedNiches.length} selecionado{selectedNiches.length !== 1 && "s"}
-                </span>
-              </div>
+            {/* Toggle de modo */}
+            <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-card border border-border">
+              <button type="button" onClick={() => setTargetMode("niche")}
+                className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition ${
+                  targetMode === "niche" ? "bg-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:bg-secondary/50"
+                }`}>
+                <Target className="h-4 w-4" /> Por nicho
+              </button>
+              <button type="button" onClick={() => setTargetMode("server")}
+                className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition ${
+                  targetMode === "server" ? "bg-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:bg-secondary/50"
+                }`}>
+                <Server className="h-4 w-4" /> Servidor rival
+              </button>
+            </div>
 
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input value={nicheSearch} onChange={(e) => setNicheSearch(e.target.value)}
-                  placeholder="Buscar nicho... (ex: valorant, anime, lojas)" className="pl-9" />
-              </div>
+            {targetMode === "niche" && (
+              <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-bold flex items-center gap-2"><Target className="h-4 w-4 text-primary" /> Escolha o nicho</h2>
+                  <span className="text-xs px-2 py-1 rounded-full bg-primary/15 font-bold text-primary">
+                    {selectedNiches.length} selecionado{selectedNiches.length !== 1 && "s"}
+                  </span>
+                </div>
 
-              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-                {filteredGroups.map((g) => (
-                  <div key={g.id}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xl">{g.emoji}</span>
-                      <h3 className="font-bold text-sm">{g.label}</h3>
-                      <span className="text-[10px] text-muted-foreground">· {g.description}</span>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input value={nicheSearch} onChange={(e) => setNicheSearch(e.target.value)}
+                    placeholder="Buscar nicho... (ex: valorant, anime, lojas)" className="pl-9" />
+                </div>
+
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                  {filteredGroups.map((g) => (
+                    <div key={g.id}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xl">{g.emoji}</span>
+                        <h3 className="font-bold text-sm">{g.label}</h3>
+                        <span className="text-[10px] text-muted-foreground">· {g.description}</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {g.niches.map((n) => {
+                          const sel = selectedNiches.includes(n.value);
+                          return (
+                            <button key={n.value} type="button" onClick={() => toggleNiche(n.value)}
+                              className={`relative p-3 rounded-xl text-left transition border-2 ${
+                                sel ? "border-primary bg-primary/15 shadow-glow" : "border-border bg-background/40 hover:border-primary/40"
+                              }`}>
+                              {sel && (
+                                <div className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-primary grid place-items-center">
+                                  <Check className="h-3 w-3 text-primary-foreground" />
+                                </div>
+                              )}
+                              <div className="text-2xl mb-1">{n.emoji}</div>
+                              <div className="font-bold text-xs leading-tight">{n.label}</div>
+                              {n.description && <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">{n.description}</div>}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {g.niches.map((n) => {
-                        const sel = selectedNiches.includes(n.value);
-                        return (
-                          <button key={n.value} type="button" onClick={() => toggleNiche(n.value)}
-                            className={`relative p-3 rounded-xl text-left transition border-2 ${
-                              sel ? "border-primary bg-primary/15 shadow-glow" : "border-border bg-background/40 hover:border-primary/40"
-                            }`}>
-                            {sel && (
-                              <div className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-primary grid place-items-center">
-                                <Check className="h-3 w-3 text-primary-foreground" />
-                              </div>
-                            )}
-                            <div className="text-2xl mb-1">{n.emoji}</div>
-                            <div className="font-bold text-xs leading-tight">{n.label}</div>
-                            {n.description && <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">{n.description}</div>}
-                          </button>
-                        );
-                      })}
+                  ))}
+                  {filteredGroups.length === 0 && (
+                    <div className="text-center py-8 text-sm text-muted-foreground">Nenhum nicho encontrado pra "{nicheSearch}"</div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {targetMode === "server" && (
+              <div className="rounded-2xl bg-gradient-to-br from-card to-card/50 border border-border p-5 space-y-4">
+                <div>
+                  <h2 className="font-bold flex items-center gap-2"><Radar className="h-4 w-4 text-primary" /> Atacar servidor rival</h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Cole o link de convite do servidor que você quer atingir. Vamos verificar a conexão.
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input value={serverInput} onChange={(e) => { setServerInput(e.target.value); setRivalConfirmed(false); }}
+                      placeholder="discord.gg/abc123" className="pl-9" disabled={verifying} />
+                  </div>
+                  <Button type="button" onClick={verifyServer} disabled={verifying || !serverInput.trim()} className="gap-1.5">
+                    {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <><ShieldCheck className="h-4 w-4" /> Verificar</>}
+                  </Button>
+                </div>
+
+                {verifying && (
+                  <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-bold text-primary">
+                      <Loader2 className="h-4 w-4 animate-spin" /> {verifyStage}
+                    </div>
+                    <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-primary to-primary-glow animate-pulse" style={{ width: "70%" }} />
                     </div>
                   </div>
-                ))}
-                {filteredGroups.length === 0 && (
-                  <div className="text-center py-8 text-sm text-muted-foreground">Nenhum nicho encontrado pra "{nicheSearch}"</div>
+                )}
+
+                {rivalServer && !verifying && (
+                  <div className="rounded-xl border-2 border-success/40 bg-success/5 p-4 space-y-3 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="flex items-center gap-3">
+                      {rivalServer.icon_url ? (
+                        <img src={rivalServer.icon_url} alt="" className="h-14 w-14 rounded-xl ring-2 ring-success/40" />
+                      ) : (
+                        <div className="h-14 w-14 rounded-xl bg-secondary grid place-items-center font-bold text-lg">{rivalServer.name[0]}</div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <ShieldCheck className="h-4 w-4 text-success" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-success">Conexão estabelecida</span>
+                        </div>
+                        <div className="font-black text-base truncate">{rivalServer.name}</div>
+                        <div className="text-xs text-muted-foreground flex items-center gap-2">
+                          <span><Users className="h-3 w-3 inline" /> {rivalServer.approximate_member_count.toLocaleString("pt-BR")} membros</span>
+                          <span>· <span className="h-1.5 w-1.5 rounded-full bg-success inline-block animate-pulse" /> {rivalServer.approximate_presence_count.toLocaleString("pt-BR")} online</span>
+                        </div>
+                      </div>
+                    </div>
+                    {rivalServer.description && (
+                      <p className="text-xs text-muted-foreground line-clamp-2">{rivalServer.description}</p>
+                    )}
+
+                    {!rivalConfirmed ? (
+                      <div className="pt-2 border-t border-success/20 space-y-2">
+                        <p className="text-sm">Quer mesmo divulgar nesse servidor?</p>
+                        <div className="flex gap-2">
+                          <Button type="button" size="sm" variant="outline" onClick={() => { setRivalServer(null); setServerInput(""); }}>
+                            <X className="h-3.5 w-3.5" /> Cancelar
+                          </Button>
+                          <Button type="button" size="sm" variant="discord" onClick={() => setRivalConfirmed(true)} className="flex-1">
+                            <Check className="h-3.5 w-3.5" /> Sim, divulgar aqui
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 pt-2 border-t border-success/20">
+                        <Check className="h-4 w-4 text-success" /> <span className="text-sm font-bold text-success">Confirmado — pronto pra disparar</span>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
-            </div>
+            )}
 
             <div className="rounded-2xl bg-gradient-to-br from-primary/15 to-primary-glow/10 border border-primary/30 p-5 space-y-4">
               <h2 className="font-bold flex items-center gap-2"><Coins className="h-4 w-4 text-primary" /> Quantas DMs disparar?</h2>
@@ -404,18 +567,30 @@ const NewCampaign = () => {
               <div className="grid sm:grid-cols-2 gap-3 text-sm">
                 <Info label="Nome interno" value={name} />
                 <Info label="Título" value={title} />
-                <Info label="Nichos" value={`${selectedNiches.length} selecionado(s)`} />
+                <Info label="Alvo" value={targetMode === "server"
+                  ? (rivalServer?.name ? `Servidor: ${rivalServer.name}` : "Servidor rival")
+                  : `${selectedNiches.length} nicho(s)`} />
                 <Info label="Alcance" value={`${targetCount.toLocaleString("pt-BR")} pessoas`} />
                 <Info label="Custo" value={`${cost} DMs`} />
                 <Info label="Saldo após" value={formatCoins(Math.max(0, myCoins - cost))} />
               </div>
-              <div className="flex flex-wrap gap-1.5 pt-3 border-t border-border">
-                {selectedNiches.map((v) => {
-                  const n = findNiche(v);
-                  if (!n) return null;
-                  return <span key={v} className="text-[11px] px-2 py-1 rounded-md bg-primary/10 text-primary font-semibold">{n.emoji} {n.label}</span>;
-                })}
-              </div>
+              {targetMode === "server" && rivalServer ? (
+                <div className="flex items-center gap-3 pt-3 border-t border-border">
+                  {rivalServer.icon_url && <img src={rivalServer.icon_url} className="h-10 w-10 rounded-lg" />}
+                  <div className="min-w-0">
+                    <div className="font-bold truncate">{rivalServer.name}</div>
+                    <div className="text-xs text-muted-foreground">{rivalServer.approximate_member_count.toLocaleString("pt-BR")} membros</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-1.5 pt-3 border-t border-border">
+                  {selectedNiches.map((v) => {
+                    const n = findNiche(v);
+                    if (!n) return null;
+                    return <span key={v} className="text-[11px] px-2 py-1 rounded-md bg-primary/10 text-primary font-semibold">{n.emoji} {n.label}</span>;
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-primary-glow/10 border border-primary/30 p-4">
