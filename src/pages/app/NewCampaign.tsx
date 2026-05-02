@@ -94,6 +94,10 @@ const NewCampaign = () => {
   }, [editId, isEdit, user]);
 
   useEffect(() => {
+    if (targetMode === "server") {
+      setMaxReach(rivalServer?.approximate_member_count ?? 0);
+      return;
+    }
     let q = supabase.from("discord_servers").select("member_count, niche").eq("bot_in_server", true);
     q.then(({ data }) => {
       const filtered = (data ?? []).filter((s: any) =>
@@ -102,7 +106,7 @@ const NewCampaign = () => {
       const total = filtered.reduce((sum, x: any) => sum + (x.member_count || 0), 0);
       setMaxReach(total);
     });
-  }, [selectedNiches]);
+  }, [selectedNiches, targetMode, rivalServer]);
 
   const cost = useMemo(() => dmsToCoins(targetCount), [targetCount]);
   const myCoins = profile?.credits ?? 0;
