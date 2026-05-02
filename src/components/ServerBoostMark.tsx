@@ -33,7 +33,7 @@ export const DMFlowMark = ({ size = "md", showWordmark = true, className }: Prop
       </div>
       {showWordmark && (
         <span className={cn(s.text, "font-display font-black tracking-tight leading-none")}>
-          SERVER<span className="text-primary">BOOST</span>
+          DM<span className="text-primary">FLOW</span>
         </span>
       )}
     </div>
