@@ -520,7 +520,7 @@ const NewCampaign = () => {
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 pt-2 border-t border-success/20">
-                        <CheckIcon /> <span className="text-sm font-bold text-success">Confirmado — pronto pra disparar</span>
+                        <Check className="h-4 w-4 text-success" /> <span className="text-sm font-bold text-success">Confirmado — pronto pra disparar</span>
                       </div>
                     )}
                   </div>
