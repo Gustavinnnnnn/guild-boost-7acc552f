@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, useInView, useScroll, useTransform, useMotionValue, useSpring, animate } from "framer-motion";
+import { motion, useInView, useScroll, useTransform, useMotionValue, useSpring, animate, type Variants } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { DiscordIcon } from "@/components/DiscordIcon";
 import { SupportFab } from "@/components/SupportFab";
@@ -29,12 +29,14 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 /* ---------- Reusable animated bits ---------- */
 
-const fadeUp = {
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
-  show: (i = 0) => ({
+  show: (i: number = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: i * 0.08 },
+    transition: { duration: 0.6, ease: EASE as any, delay: i * 0.08 },
   }),
 };
 
