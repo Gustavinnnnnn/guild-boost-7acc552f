@@ -319,6 +319,59 @@ const Landing = () => {
                   </div>
                 ))}
               </motion.div>
+
+              {/* Prova social — avatares + estrelas + contador ao vivo */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1.15 }}
+                className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex -space-x-2.5">
+                    {[
+                      "from-primary to-primary-glow",
+                      "from-success to-primary",
+                      "from-warning to-primary",
+                      "from-primary-glow to-success",
+                      "from-primary to-warning",
+                    ].map((g, i) => (
+                      <div
+                        key={i}
+                        className={`h-8 w-8 rounded-full bg-gradient-to-br ${g} border-2 border-background grid place-items-center text-[10px] font-black text-white shadow-lg`}
+                      >
+                        {String.fromCharCode(65 + i)}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-left">
+                    <div className="flex items-center gap-0.5 text-warning">
+                      {[0, 1, 2, 3, 4].map((i) => (
+                        <svg key={i} viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                          <path d="M10 1.5l2.7 5.5 6.1.9-4.4 4.3 1 6.1L10 15.4l-5.4 2.9 1-6.1L1.2 7.9l6.1-.9L10 1.5z" />
+                        </svg>
+                      ))}
+                    </div>
+                    <p className="text-[11px] md:text-xs text-muted-foreground font-semibold">
+                      <span className="text-foreground font-black">+1.200 donos</span> já usam
+                    </p>
+                  </div>
+                </div>
+
+                <div className="hidden sm:block h-8 w-px bg-border" />
+
+                {/* Ticker DMs ao vivo */}
+                <div className="flex items-center gap-2 rounded-full bg-card/70 backdrop-blur border border-border px-3 py-1.5 shadow-lg">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
+                  </span>
+                  <span className="text-[11px] md:text-xs font-bold tabular-nums">
+                    <AnimatedNumber value={47832} duration={2.4} />{" "}
+                    <span className="text-muted-foreground font-semibold">DMs entregues hoje</span>
+                  </span>
+                </div>
+              </motion.div>
             </div>
 
             {/* PAINEL DEMO */}
