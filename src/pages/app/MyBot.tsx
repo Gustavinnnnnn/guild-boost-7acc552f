@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import { toast } from "sonner";
 import { DMFlowMark } from "@/components/DMFlowMark";
 import {
   Bot, KeyRound, CheckCircle2, Server, Send, Sparkles, Upload, X,
-  TrendingUp, MessageCircle, AlertCircle, Loader2, Users, Flame, Target, Zap, Clock, RefreshCw,
+  TrendingUp, MessageCircle, AlertCircle, Loader2, Users, Flame, Target, Zap, Clock, RefreshCw, HelpCircle,
 } from "lucide-react";
 
 type UserBot = {

@@ -18,6 +18,10 @@ Deno.serve(async (req) => {
     const { data: { user } } = await supa.auth.getUser(auth.replace("Bearer ", ""));
     if (!user) return json({ error: "unauthenticated" }, 401);
 
+    // Restrito a admin
+    const { data: roles } = await supa.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+    if (!roles) return json({ error: "forbidden", detail: "Acesso restrito ao administrador." }, 403);
+
     const body = await req.json().catch(() => ({}));
     const action = body.action || "connect";
 

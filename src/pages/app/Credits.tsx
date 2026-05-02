@@ -16,33 +16,33 @@ const PLANS: { key: PlanKey; name: string; price: string; dms: number; tagline: 
   {
     key: "basico",
     name: "Básico",
-    price: "19",
-    dms: 90,
+    price: "9,90",
+    dms: 100,
     tagline: "Pra começar",
     angle: "Teste rápido de audiência",
     badge: "Entrada",
-    perks: ["Saldo liberado após confirmação", "Campanha com métrica", "Ideal pra validar oferta"],
+    perks: ["Saldo liberado após confirmação", "100 DMs pra divulgar", "Ideal pra validar oferta"],
   },
   {
     key: "pro",
     name: "PRO",
-    price: "39",
-    dms: 220,
+    price: "29,90",
+    dms: 350,
     tagline: "Mais comprado",
     angle: "Volume forte pra conversão",
     badge: "Melhor escala",
-    perks: ["Maior volume por recarga", "Custo por DM mais agressivo", "Prioridade na fila", "Suporte rápido"],
+    perks: ["350 DMs no saldo", "Custo por DM mais agressivo", "Prioridade na fila", "Suporte rápido"],
     highlight: true,
   },
   {
     key: "elite",
     name: "Elite",
-    price: "79",
-    dms: 500,
+    price: "49,90",
+    dms: 700,
     tagline: "Pra escalar",
     angle: "Disparo pesado de tráfego",
     badge: "Máxima força",
-    perks: ["Maior poder de disparo", "Menor custo por DM", "Suporte VIP", "Feito pra escalar servidor"],
+    perks: ["700 DMs no saldo", "Menor custo por DM", "Suporte VIP", "Feito pra escalar servidor"],
   },
 ];
 
@@ -244,7 +244,7 @@ const Credits = () => {
                     <div className="text-[10px] uppercase tracking-widest font-black text-muted-foreground">Investimento</div>
                     <div className="flex items-baseline gap-1 mt-1">
                       <span className="text-sm text-muted-foreground">R$</span>
-                      <span className={`text-5xl font-black leading-none ${p.highlight ? "text-primary" : "text-foreground"}`}>{p.price}</span>
+                      <span className={`text-4xl font-black leading-none tracking-tight ${p.highlight ? "text-primary" : "text-foreground"}`}>{p.price}</span>
                     </div>
                   </div>
                   <div className="text-right">

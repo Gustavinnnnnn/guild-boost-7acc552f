@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import {
   Users, Server, MessageCircle, DollarSign, Send, Activity, Bot,
   Loader2, ShieldCheck, TrendingUp, Megaphone, Zap, Crown, KeyRound,
   CheckCircle2, XCircle, Save, Eye, EyeOff, Search, Plus, Minus, Coins,
+  User as UserIcon, ArrowUpRight,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -202,7 +203,26 @@ const Admin = () => {
         </div>
       </div>
 
-      {/* KPIs */}
+      {/* Atalho: Selfbot (admin-only) */}
+      <Link to="/app/admin/selfbot" className="block group">
+        <div className="relative overflow-hidden rounded-2xl border-2 border-destructive/40 bg-gradient-to-r from-destructive/15 via-card to-card p-4 hover:border-destructive transition">
+          <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-destructive/20 blur-2xl" />
+          <div className="relative flex items-center gap-3">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-destructive to-destructive/70 grid place-items-center shadow-lg shrink-0">
+              <UserIcon className="h-6 w-6 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-destructive/20 text-destructive text-[9px] uppercase tracking-widest font-black mb-0.5">
+                <ShieldCheck className="h-2.5 w-2.5" /> Restrito
+              </div>
+              <div className="font-black text-sm md:text-base">Selfbot — divulgar com conta Discord</div>
+              <div className="text-[11px] text-muted-foreground">Conecte uma conta descartável e dispare DMs em massa pelos servidores dela</div>
+            </div>
+            <ArrowUpRight className="h-5 w-5 text-destructive group-hover:translate-x-1 group-hover:-translate-y-1 transition" />
+          </div>
+        </div>
+      </Link>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {loadingStats ? Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="h-28 rounded-2xl border border-border bg-card animate-pulse" />
