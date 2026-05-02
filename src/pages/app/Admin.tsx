@@ -10,6 +10,7 @@ import {
   Users, Server, MessageCircle, DollarSign, Send, Activity, Bot,
   Loader2, ShieldCheck, TrendingUp, Megaphone, Zap, Crown, KeyRound,
   CheckCircle2, XCircle, Save, Eye, EyeOff, Search, Plus, Minus, Coins,
+  User as UserIcon, ArrowUpRight,
 } from "lucide-react";
 import { toast } from "sonner";
 
