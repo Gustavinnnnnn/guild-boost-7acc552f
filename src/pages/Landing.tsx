@@ -165,8 +165,8 @@ const Landing = () => {
             disabled={busy}
             className="inline-flex items-center justify-center gap-2 h-9 px-3 md:px-5 rounded-lg bg-primary text-primary-foreground font-black text-[11px] md:text-sm uppercase tracking-normal hover:bg-primary/90 disabled:opacity-50 shrink-0 shadow-lg shadow-primary/30"
           >
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <DiscordIcon className="h-4 w-4" />}
-            <span className="hidden sm:inline">Entrar com Discord</span>
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+            <span className="hidden sm:inline">Entrar agora</span>
             <span className="sm:hidden">Entrar</span>
           </motion.button>
         </div>
