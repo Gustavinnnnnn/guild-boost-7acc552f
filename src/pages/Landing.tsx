@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useInView, useScroll, useTransform, useMotionValue, useSpring, animate, type Variants } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { DiscordIcon } from "@/components/DiscordIcon";
+// (DiscordIcon removido — ServerBoost usa identidade própria)
 import { SupportFab } from "@/components/SupportFab";
 import { toast } from "sonner";
 import {
@@ -165,8 +165,8 @@ const Landing = () => {
             disabled={busy}
             className="inline-flex items-center justify-center gap-2 h-9 px-3 md:px-5 rounded-lg bg-primary text-primary-foreground font-black text-[11px] md:text-sm uppercase tracking-normal hover:bg-primary/90 disabled:opacity-50 shrink-0 shadow-lg shadow-primary/30"
           >
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <DiscordIcon className="h-4 w-4" />}
-            <span className="hidden sm:inline">Entrar com Discord</span>
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+            <span className="hidden sm:inline">Entrar agora</span>
             <span className="sm:hidden">Entrar</span>
           </motion.button>
         </div>
@@ -302,7 +302,7 @@ const Landing = () => {
                   className="relative w-full sm:w-auto inline-flex items-center justify-center gap-3 h-14 md:h-16 px-6 md:px-10 rounded-xl bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-black text-sm md:text-base uppercase tracking-wider hover:brightness-110 disabled:opacity-50 shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.7)] overflow-hidden group"
                 >
                   <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-                  {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <DiscordIcon className="h-5 w-5" />}
+                  {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Rocket className="h-5 w-5" strokeWidth={2.5} />}
                   Lançar minha primeira campanha
                   <motion.span animate={{ x: [0, 4, 0] }} transition={{ duration: 1.4, repeat: Infinity }}>
                     <ArrowRight className="h-5 w-5" />
@@ -667,7 +667,7 @@ const Landing = () => {
               {/* connector line */}
               <div className="hidden md:block absolute top-16 left-[16%] right-[16%] h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
               {[
-                { icon: DiscordIcon, title: "Conecta", desc: "Login com Discord, escolhe o servidor que vai receber tráfego." },
+                { icon: Zap, title: "Conecta", desc: "Login com Discord, escolhe o servidor que vai receber tráfego." },
                 { icon: Zap, title: "Carrega o saldo", desc: "Compra um plano, suas DMs caem na conta na hora." },
                 { icon: Target, title: "Dispara a campanha", desc: "Escreve a mensagem, define quantidade e acompanha o resultado." },
               ].map((s, i) => (
@@ -765,7 +765,7 @@ const Landing = () => {
                 className="relative w-full sm:w-auto inline-flex items-center justify-center gap-3 h-14 md:h-16 px-6 md:px-10 rounded-xl bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-black text-sm md:text-base uppercase tracking-wider hover:brightness-110 disabled:opacity-50 shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.7)] overflow-hidden group"
               >
                 <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-                {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <DiscordIcon className="h-6 w-6" />}
+                {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <Rocket className="h-6 w-6" strokeWidth={2.5} />}
                 Quero meu Discord Ads
                 <motion.span animate={{ x: [0, 4, 0] }} transition={{ duration: 1.4, repeat: Infinity }}>
                   <ArrowRight className="h-6 w-6" />

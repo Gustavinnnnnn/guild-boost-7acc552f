@@ -90,48 +90,59 @@ const Credits = () => {
   const buy = async (planKey: PlanKey) => {
     setBusy(planKey);
     const planMeta = PLANS.find((p) => p.key === planKey)!;
-    try {
-      const data = await callPaymentFunction<{
-        success?: boolean;
-        message?: string;
-        qr_code?: string;
-        reference?: string;
-        qr_code_base64?: string;
-        coins?: number;
-        expires_at?: string | null;
-      }>("create-pix-deposit", { plan: planKey });
+    let lastError: unknown = null;
 
-      if (!data?.success) {
-        toast.error(data?.message || "Não foi possível gerar o PIX agora.");
+    // Tenta até 3x antes de desistir — Paradise às vezes responde lento/falha em 1 tentativa
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const data = await callPaymentFunction<{
+          success?: boolean;
+          message?: string;
+          qr_code?: string;
+          reference?: string;
+          qr_code_base64?: string;
+          coins?: number;
+          expires_at?: string | null;
+        }>("create-pix-deposit", { plan: planKey });
+
+        if (!data?.success || !data.qr_code) {
+          lastError = new Error(data?.message || "no_qr");
+          if (attempt < 3) { await new Promise(r => setTimeout(r, 800 * attempt)); continue; }
+          toast.error("Gateway PIX instável. Tente em 30 segundos ou troque de plano.", { duration: 6000 });
+          return;
+        }
+        setPix({
+          code: data.qr_code,
+          ref: data.reference || "",
+          qr: data.qr_code_base64,
+          coins: data.coins || planMeta.dms,
+          price: planMeta.price,
+          planName: planMeta.name,
+          planKey,
+          expiresAt: data.expires_at,
+        });
+        setPaid(false);
+        setCopied(false);
+        setPaymentNotice(null);
+        setOpen(true);
         return;
+      } catch (e) {
+        lastError = e;
+        const msg = e instanceof Error ? e.message : "";
+        if (msg.includes("auth") || msg.includes("Unauthorized") || msg.includes("401")) {
+          toast.error("Sessão expirada. Entre novamente.");
+          window.location.href = "/auth";
+          return;
+        }
+        if (attempt < 3) await new Promise(r => setTimeout(r, 800 * attempt));
+      } finally {
+        if (attempt === 3) setBusy(null);
       }
-      const qrCode = data.qr_code || "";
-      setPix({
-        code: qrCode,
-        ref: data.reference || "",
-        qr: data.qr_code_base64,
-        coins: data.coins || planMeta.dms,
-        price: planMeta.price,
-        planName: planMeta.name,
-        planKey,
-        expiresAt: data.expires_at,
-      });
-      setPaid(false);
-      setCopied(false);
-      setPaymentNotice(null);
-      setOpen(true);
-    } catch (e) {
-      console.error(e);
-      const msg = e instanceof Error ? e.message : "";
-      if (msg.includes("auth") || msg.includes("Unauthorized") || msg.includes("401")) {
-        toast.error("Sessão expirada. Entre novamente.");
-        window.location.href = "/auth";
-        return;
-      }
-      toast.error("Erro ao gerar PIX. Tenta de novo em alguns segundos.");
-    } finally {
-      setBusy(null);
     }
+
+    console.error("PIX failed after 3 attempts:", lastError);
+    toast.error("Não conseguimos gerar o PIX agora. Aguarde 30s e tente de novo.", { duration: 6000 });
+    setBusy(null);
   };
 
   const copy = async () => {

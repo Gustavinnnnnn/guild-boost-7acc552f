@@ -1,7 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { LayoutDashboard, Megaphone, LogOut, MessageCircle, Crown, Bot } from "lucide-react";
 import { motion } from "framer-motion";
-import { DiscordIcon } from "@/components/DiscordIcon";
+import { ServerBoostMark } from "@/components/ServerBoostMark";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
@@ -35,11 +35,8 @@ const AppLayout = () => {
     <div className="min-h-screen bg-background flex flex-col md:flex-row">
       <aside className="hidden md:flex w-64 border-r border-border bg-card flex-col">
         <div className="p-5 border-b border-border">
-          <Link to="/app" className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary-glow grid place-items-center shadow-glow">
-              <DiscordIcon className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-bold text-lg">ServerBoost</span>
+          <Link to="/app">
+            <ServerBoostMark size="md" />
           </Link>
         </div>
 
@@ -83,11 +80,8 @@ const AppLayout = () => {
       </aside>
 
       <header className="md:hidden border-b border-border bg-card px-4 py-3 flex items-center justify-between">
-        <Link to="/app" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary-glow grid place-items-center">
-            <DiscordIcon className="h-4 w-4 text-white" />
-          </div>
-          <span className="font-bold">ServerBoost</span>
+        <Link to="/app">
+          <ServerBoostMark size="sm" />
         </Link>
         <div className="flex items-center gap-2">
           <Link to="/app/creditos" className="flex items-center gap-1 px-2 py-1 rounded bg-primary/15">

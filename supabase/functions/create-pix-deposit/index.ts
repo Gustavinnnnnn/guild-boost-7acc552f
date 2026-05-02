@@ -77,29 +77,59 @@ Deno.serve(async (req) => {
     const { data: profile } = await admin.from("profiles").select("username").eq("id", userId).single();
     const customerName = profile?.username || "Cliente CoinsDM";
 
-    // Cria transação na Paradise
-    const paradiseRes = await fetch(PARADISE_URL, {
-      method: "POST",
-      headers: {
-        "X-API-Key": PARADISE_API_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        amount: amountCents,
-        description: `${planLabel} — ${totalCoins} DMs`,
-        reference,
-        source: "api_externa",
-        customer: {
-          name: customerName,
-          email: userEmail,
-          document: "00000000000",
-          phone: "11999999999",
-        },
-      }),
-    });
+    // Cria transação na Paradise — com retry (gateway às vezes responde 502)
+    const callParadise = async () => {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 18000);
+      try {
+        return await fetch(PARADISE_URL, {
+          method: "POST",
+          headers: {
+            "X-API-Key": PARADISE_API_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount: amountCents,
+            description: `${planLabel} — ${totalCoins} DMs`,
+            reference,
+            source: "api_externa",
+            customer: {
+              name: customerName,
+              email: userEmail,
+              document: "00000000000",
+              phone: "11999999999",
+            },
+          }),
+          signal: ctrl.signal,
+        });
+      } finally {
+        clearTimeout(t);
+      }
+    };
 
-    const paradiseData = await paradiseRes.json();
-    console.log("Paradise response:", JSON.stringify(paradiseData));
+    let paradiseRes: Response | null = null;
+    let paradiseData: any = null;
+    let lastErr: unknown = null;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        paradiseRes = await callParadise();
+        paradiseData = await paradiseRes.json().catch(() => ({}));
+        if (paradiseRes.ok) break;
+        console.warn(`Paradise attempt ${attempt} failed:`, paradiseRes.status);
+      } catch (e) {
+        lastErr = e;
+        console.warn(`Paradise attempt ${attempt} error:`, e);
+      }
+      if (attempt < 2) await new Promise(r => setTimeout(r, 600));
+    }
+
+    if (!paradiseRes || !paradiseData) {
+      console.error("Paradise unreachable:", lastErr);
+      return new Response(JSON.stringify({ error: "gateway_unreachable", message: "Gateway PIX indisponível. Tente em alguns segundos." }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
 
     // Paradise pode retornar campos com nomes diferentes — normaliza
     const pixCode =
