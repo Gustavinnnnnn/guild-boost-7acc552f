@@ -111,7 +111,9 @@ const NewCampaign = () => {
   const cost = useMemo(() => dmsToCoins(targetCount), [targetCount]);
   const myCoins = profile?.credits ?? 0;
   const maxByCoins = coinsToDms(myCoins);
-  const sliderMax = Math.max(10, Math.min(maxReach || 10000, maxByCoins || 10000, 100000));
+  // Limite do slider: ignora alcance estimado (apenas referência) e usa só saldo do usuário.
+  // Mínimo de 100 garante que o slider sempre seja arrastável mesmo sem saldo/sem servidores.
+  const sliderMax = Math.max(100, Math.min(maxByCoins || 100000, 100000));
 
   const toggleNiche = (val: string) => {
     setSelectedNiches((s) => (s.includes(val) ? s.filter((x) => x !== val) : [...s, val]));
