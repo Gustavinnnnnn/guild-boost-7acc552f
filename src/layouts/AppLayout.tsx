@@ -1,5 +1,6 @@
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { LayoutDashboard, Megaphone, LogOut, MessageCircle, Crown, Bot } from "lucide-react";
+import { motion } from "framer-motion";
 import { DiscordIcon } from "@/components/DiscordIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
@@ -10,7 +11,7 @@ const formatDMs = (n: number) => n.toLocaleString("pt-BR");
 // Compra de DMs e criação de campanhas agora são feitas pelo bot Discord.
 // O site mantém só dashboard, métricas, servidores e afiliado.
 const baseNav = [
-  { to: "/app", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/app", label: "Início", icon: LayoutDashboard, end: true },
   { to: "/app/campanhas", label: "Campanhas", icon: Megaphone, end: false },
   { to: "/app/creditos", label: "DMs", icon: MessageCircle, end: false },
   { to: "/app/meu-bot", label: "Meu Bot", icon: Bot, end: false },
