@@ -1,7 +1,7 @@
 {
   "name": "coinsdm-bot",
   "version": "1.0.0",
-  "description": "Bot Discord do CoinsDM/ServerBoost — comandos para comprar DMs, criar campanhas, ver dashboard e afiliado.",
+  "description": "Bot Discord do CoinsDM/DMFlow — comandos para comprar DMs, criar campanhas, ver dashboard e afiliado.",
   "main": "src/index.js",
   "type": "module",
   "scripts": {

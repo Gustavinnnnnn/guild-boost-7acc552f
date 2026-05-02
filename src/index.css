@@ -2,11 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ServerBoost — Discord-inspired design system. All colors HSL. */
+/* DMFlow — Discord-inspired design system. All colors HSL. */
 
 @layer base {
   :root {
-    /* ServerBoost — preto + azul Discord (#5865F2) */
+    /* DMFlow — preto + azul Discord (#5865F2) */
     --background: 225 15% 6%;          /* preto azulado */
     --foreground: 220 20% 96%;
 
@@ -63,7 +63,7 @@
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Force dark — OrgBoost aesthetic */
+  /* Force dark — DMFlow aesthetic */
   .light {
     color-scheme: dark;
   }

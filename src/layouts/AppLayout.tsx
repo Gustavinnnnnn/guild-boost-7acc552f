@@ -1,7 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { LayoutDashboard, Megaphone, LogOut, MessageCircle, Crown, Bot } from "lucide-react";
 import { motion } from "framer-motion";
-import { ServerBoostMark } from "@/components/ServerBoostMark";
+import { DMFlowMark } from "@/components/DMFlowMark";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ const AppLayout = () => {
       <aside className="hidden md:flex w-64 border-r border-border bg-card flex-col">
         <div className="p-5 border-b border-border">
           <Link to="/app">
-            <ServerBoostMark size="md" />
+            <DMFlowMark size="md" />
           </Link>
         </div>
 
@@ -81,7 +81,7 @@ const AppLayout = () => {
 
       <header className="md:hidden border-b border-border bg-card px-4 py-3 flex items-center justify-between">
         <Link to="/app">
-          <ServerBoostMark size="sm" />
+          <DMFlowMark size="sm" />
         </Link>
         <div className="flex items-center gap-2">
           <Link to="/app/creditos" className="flex items-center gap-1 px-2 py-1 rounded bg-primary/15">

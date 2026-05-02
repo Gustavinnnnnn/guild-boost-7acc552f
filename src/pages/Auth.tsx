@@ -41,8 +41,8 @@ const Auth = () => {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(235_86%_65%/0.15),transparent_50%)]" />
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
-          <img src={logo} alt="ServerBoost" className="h-20 w-20 mx-auto rounded-2xl shadow-glow mb-4 object-cover" width={80} height={80} />
-          <h1 className="text-3xl font-bold">ServerBoost</h1>
+          <img src={logo} alt="DMFlow" className="h-20 w-20 mx-auto rounded-2xl shadow-glow mb-4 object-cover" width={80} height={80} />
+          <h1 className="text-3xl font-bold">DMFlow</h1>
           <p className="text-muted-foreground text-sm mt-1">Cresça seu servidor do Discord de verdade</p>
         </div>
 

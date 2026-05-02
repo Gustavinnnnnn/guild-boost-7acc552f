@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { ServerBoostMark } from "@/components/ServerBoostMark";
+import { DMFlowMark } from "@/components/DMFlowMark";
 import {
   Bot, KeyRound, CheckCircle2, Server, Send, Sparkles, Upload, X,
   TrendingUp, MessageCircle, AlertCircle, Loader2, Users, Flame, Target, Zap, Clock,
@@ -134,7 +134,7 @@ export default function MyBot() {
           <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-primary-glow/15 blur-3xl pointer-events-none" />
           <div className="relative">
             <div className="flex items-center justify-center mb-5">
-              <ServerBoostMark size="xl" showWordmark={false} />
+              <DMFlowMark size="xl" showWordmark={false} />
             </div>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/15 border border-success/30 text-success text-[10px] uppercase tracking-widest font-black mb-3">
               <Sparkles className="h-3 w-3" /> Grátis por enquanto
