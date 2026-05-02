@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useInView, useScroll, useTransform, useMotionValue, useSpring, animate, type Variants } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { DiscordIcon } from "@/components/DiscordIcon";
+// (DiscordIcon removido — ServerBoost usa identidade própria)
 import { SupportFab } from "@/components/SupportFab";
 import { toast } from "sonner";
 import {
