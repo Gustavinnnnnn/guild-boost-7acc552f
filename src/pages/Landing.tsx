@@ -667,7 +667,7 @@ const Landing = () => {
               {/* connector line */}
               <div className="hidden md:block absolute top-16 left-[16%] right-[16%] h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
               {[
-                { icon: DiscordIcon, title: "Conecta", desc: "Login com Discord, escolhe o servidor que vai receber tráfego." },
+                { icon: Zap, title: "Conecta", desc: "Login com Discord, escolhe o servidor que vai receber tráfego." },
                 { icon: Zap, title: "Carrega o saldo", desc: "Compra um plano, suas DMs caem na conta na hora." },
                 { icon: Target, title: "Dispara a campanha", desc: "Escreve a mensagem, define quantidade e acompanha o resultado." },
               ].map((s, i) => (
