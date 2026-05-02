@@ -765,7 +765,7 @@ const Landing = () => {
                 className="relative w-full sm:w-auto inline-flex items-center justify-center gap-3 h-14 md:h-16 px-6 md:px-10 rounded-xl bg-gradient-to-r from-primary to-primary-glow text-primary-foreground font-black text-sm md:text-base uppercase tracking-wider hover:brightness-110 disabled:opacity-50 shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.7)] overflow-hidden group"
               >
                 <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-                {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <DiscordIcon className="h-6 w-6" />}
+                {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <Rocket className="h-6 w-6" strokeWidth={2.5} />}
                 Quero meu Discord Ads
                 <motion.span animate={{ x: [0, 4, 0] }} transition={{ duration: 1.4, repeat: Infinity }}>
                   <ArrowRight className="h-6 w-6" />
