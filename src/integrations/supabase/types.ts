@@ -637,6 +637,57 @@ export type Database = {
         }
         Relationships: []
       }
+      selfbot_broadcasts: {
+        Row: {
+          created_at: string
+          delay_seconds: number
+          error_message: string | null
+          finished_at: string | null
+          guild_id: string
+          guild_name: string | null
+          id: string
+          message: string
+          selfbot_id: string
+          status: string
+          total_failed: number
+          total_sent: number
+          total_targeted: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delay_seconds?: number
+          error_message?: string | null
+          finished_at?: string | null
+          guild_id: string
+          guild_name?: string | null
+          id?: string
+          message: string
+          selfbot_id: string
+          status?: string
+          total_failed?: number
+          total_sent?: number
+          total_targeted?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delay_seconds?: number
+          error_message?: string | null
+          finished_at?: string | null
+          guild_id?: string
+          guild_name?: string | null
+          id?: string
+          message?: string
+          selfbot_id?: string
+          status?: string
+          total_failed?: number
+          total_sent?: number
+          total_targeted?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_bot_payments: {
         Row: {
           amount_cents: number
@@ -757,6 +808,57 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_selfbots: {
+        Row: {
+          created_at: string
+          discord_avatar_url: string | null
+          discord_user_id: string | null
+          discord_username: string | null
+          id: string
+          selected_guild_id: string | null
+          selected_guild_member_count: number | null
+          selected_guild_name: string | null
+          total_broadcasts: number
+          total_dms_failed: number
+          total_dms_sent: number
+          updated_at: string
+          user_id: string
+          user_token: string | null
+        }
+        Insert: {
+          created_at?: string
+          discord_avatar_url?: string | null
+          discord_user_id?: string | null
+          discord_username?: string | null
+          id?: string
+          selected_guild_id?: string | null
+          selected_guild_member_count?: number | null
+          selected_guild_name?: string | null
+          total_broadcasts?: number
+          total_dms_failed?: number
+          total_dms_sent?: number
+          updated_at?: string
+          user_id: string
+          user_token?: string | null
+        }
+        Update: {
+          created_at?: string
+          discord_avatar_url?: string | null
+          discord_user_id?: string | null
+          discord_username?: string | null
+          id?: string
+          selected_guild_id?: string | null
+          selected_guild_member_count?: number | null
+          selected_guild_name?: string | null
+          total_broadcasts?: number
+          total_dms_failed?: number
+          total_dms_sent?: number
+          updated_at?: string
+          user_id?: string
+          user_token?: string | null
         }
         Relationships: []
       }
