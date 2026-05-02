@@ -166,7 +166,10 @@ export default function MyAccount() {
             className="font-mono mt-1"
           />
           <p className="text-xs text-muted-foreground mt-2">
-            No Discord web (F12) → Network → Filtre "api" → clique numa request → Headers → copie o valor de <code>authorization</code>.
+            Não sabe como pegar o token?{" "}
+            <a href="/app/minha-conta/como-pegar-token" className="text-primary font-semibold underline">
+              Ver tutorial passo a passo →
+            </a>
           </p>
           <Button onClick={connect} disabled={connecting} className="mt-4 w-full" variant="discord">
             {connecting ? <><Loader2 className="h-4 w-4 animate-spin" /> Conectando…</> : "Conectar"}
