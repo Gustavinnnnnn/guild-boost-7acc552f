@@ -127,31 +127,99 @@ export default function MyBot() {
   if (!bot?.bot_id) {
     return (
       <div className="max-w-3xl mx-auto space-y-6">
-        <div className="text-center space-y-3">
-          <div className="inline-flex h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary-glow items-center justify-center shadow-glow">
-            <Bot className="h-8 w-8 text-primary-foreground" />
+        {/* Hero */}
+        <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/15 via-card to-card p-6 md:p-10">
+          <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-primary-glow/15 blur-3xl pointer-events-none" />
+          <div className="relative">
+            <div className="flex items-center justify-center mb-5">
+              <ServerBoostMark size="xl" showWordmark={false} />
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/15 border border-success/30 text-success text-[10px] uppercase tracking-widest font-black mb-3">
+              <Sparkles className="h-3 w-3" /> Grátis por enquanto
+            </div>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight">
+              Conecte <span className="text-primary">seu bot</span>, divulgue pra todo seu servidor
+            </h1>
+            <p className="text-sm md:text-base text-muted-foreground mt-3 max-w-2xl leading-relaxed">
+              Coloque o token do <b>seu próprio bot Discord</b> aqui e dispare DMs em massa pra
+              todos os membros do <b>seu servidor</b>. Sem comprar saldo, sem limite por dia
+              (exceto 3 disparos/dia), <b>tudo seu</b>.
+            </p>
           </div>
-          <h1 className="text-3xl font-black">Meu Bot Próprio</h1>
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            Conecte seu próprio bot do Discord e divulgue por DM para todos os membros do <b>seu servidor</b>. <span className="text-success font-semibold">Grátis por enquanto.</span>
-          </p>
         </div>
 
-        <Card className="p-6 space-y-5 bg-gradient-to-br from-card to-card/50 border-primary/20">
-          <h2 className="font-bold text-lg flex items-center gap-2"><KeyRound className="h-5 w-5 text-primary" /> Conectar bot</h2>
-          <ol className="text-sm text-muted-foreground space-y-1.5 list-decimal list-inside">
-            <li>Vá em <a href="https://discord.com/developers/applications" target="_blank" className="text-primary underline">discord.com/developers/applications</a></li>
-            <li>Crie uma aplicação → Bot → <b>Reset Token</b> e copie</li>
-            <li>Em <b>Privileged Gateway Intents</b>, ative <b className="text-warning">SERVER MEMBERS INTENT</b></li>
-            <li>Convide o bot pro seu servidor com permissões de envio de mensagem</li>
-            <li>Cole o token aqui embaixo</li>
-          </ol>
-          <div className="space-y-2">
-            <Label>Token do bot</Label>
-            <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="MTIzNDU2Nzg5..." />
+        {/* Passo a passo visual */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { n: "1", t: "Crie o bot", d: "Em discord.com/developers", icon: Bot },
+            { n: "2", t: "Ative intents", d: "SERVER MEMBERS INTENT", icon: Zap },
+            { n: "3", t: "Cole o token", d: "Pronto, é só divulgar", icon: KeyRound },
+          ].map((s) => (
+            <div key={s.n} className="rounded-2xl border border-border bg-card p-4 relative overflow-hidden">
+              <div className="absolute -right-3 -top-3 text-7xl font-black text-primary/5 leading-none select-none">{s.n}</div>
+              <div className="relative">
+                <div className="h-9 w-9 rounded-lg bg-primary/15 text-primary grid place-items-center mb-2">
+                  <s.icon className="h-4 w-4" />
+                </div>
+                <div className="font-black text-sm">{s.t}</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">{s.d}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Form */}
+        <Card className="p-6 space-y-5 bg-gradient-to-br from-card to-card/50 border-primary/30 shadow-[0_20px_60px_-20px_hsl(var(--primary)/0.4)]">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="font-black text-lg flex items-center gap-2">
+                <KeyRound className="h-5 w-5 text-primary" /> Cole o token do seu bot
+              </h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                Token fica criptografado e só o seu bot consegue usar.
+              </p>
+            </div>
+            <a
+              href="https://discord.com/developers/applications"
+              target="_blank"
+              rel="noopener"
+              className="text-[11px] text-primary underline shrink-0 mt-1"
+            >
+              Abrir Developer Portal ↗
+            </a>
           </div>
-          <Button onClick={connect} disabled={connecting} className="w-full">
-            {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Bot className="h-4 w-4" /> Conectar bot</>}
+
+          <details className="group rounded-xl border border-border bg-background/50 p-3">
+            <summary className="cursor-pointer text-xs font-bold text-muted-foreground flex items-center justify-between list-none">
+              <span className="flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" /> Como pegar o token (passo a passo)</span>
+              <span className="text-[10px] group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside mt-3 pl-1">
+              <li>Vá em <a href="https://discord.com/developers/applications" target="_blank" rel="noopener" className="text-primary underline">discord.com/developers/applications</a></li>
+              <li>Crie uma aplicação → Bot → <b>Reset Token</b> e copie</li>
+              <li>Em <b>Privileged Gateway Intents</b>, ative <b className="text-warning">SERVER MEMBERS INTENT</b></li>
+              <li>Convide o bot pro seu servidor com permissão de enviar mensagens</li>
+            </ol>
+          </details>
+
+          <div className="space-y-2">
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Token do bot</Label>
+            <Input
+              type="password"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="MTIzNDU2Nzg5MDEyMzQ1Njc4OQ.GxXxXx..."
+              className="font-mono text-sm h-12"
+            />
+          </div>
+
+          <Button onClick={connect} disabled={connecting} variant="discord" className="w-full h-12 text-sm">
+            {connecting ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Conectando...</>
+            ) : (
+              <><Zap className="h-4 w-4" /> Conectar meu bot</>
+            )}
           </Button>
         </Card>
       </div>
