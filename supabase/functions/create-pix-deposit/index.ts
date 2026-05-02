@@ -44,9 +44,9 @@ Deno.serve(async (req) => {
 
     // Plans: fixed price → fixed coins (DMs)
     const PLANS: Record<string, { cents: number; coins: number; label: string }> = {
-      basico: { cents: 1900, coins: 90,  label: "Plano Básico" },
-      pro:    { cents: 3900, coins: 220, label: "Plano PRO" },
-      elite:  { cents: 7900, coins: 500, label: "Plano Elite" },
+      basico: { cents: 990,  coins: 100, label: "Plano Básico" },
+      pro:    { cents: 2990, coins: 350, label: "Plano PRO" },
+      elite:  { cents: 4990, coins: 700, label: "Plano Elite" },
     };
 
     let amountCents: number;
