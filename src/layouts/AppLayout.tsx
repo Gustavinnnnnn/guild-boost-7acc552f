@@ -80,11 +80,8 @@ const AppLayout = () => {
       </aside>
 
       <header className="md:hidden border-b border-border bg-card px-4 py-3 flex items-center justify-between">
-        <Link to="/app" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary-glow grid place-items-center">
-            <DiscordIcon className="h-4 w-4 text-white" />
-          </div>
-          <span className="font-bold">ServerBoost</span>
+        <Link to="/app">
+          <ServerBoostMark size="sm" />
         </Link>
         <div className="flex items-center gap-2">
           <Link to="/app/creditos" className="flex items-center gap-1 px-2 py-1 rounded bg-primary/15">
