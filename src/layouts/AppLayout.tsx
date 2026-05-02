@@ -35,11 +35,8 @@ const AppLayout = () => {
     <div className="min-h-screen bg-background flex flex-col md:flex-row">
       <aside className="hidden md:flex w-64 border-r border-border bg-card flex-col">
         <div className="p-5 border-b border-border">
-          <Link to="/app" className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary-glow grid place-items-center shadow-glow">
-              <DiscordIcon className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-bold text-lg">ServerBoost</span>
+          <Link to="/app">
+            <ServerBoostMark size="md" />
           </Link>
         </div>
 
