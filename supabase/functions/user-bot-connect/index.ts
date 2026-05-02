@@ -29,6 +29,31 @@ Deno.serve(async (req) => {
       return json({ success: true });
     }
 
+    if (action === "list_guilds") {
+      const { data: existing } = await supa.from("user_bots").select("bot_token").eq("user_id", user.id).maybeSingle();
+      if (!existing?.bot_token) return json({ error: "no_bot" }, 400);
+      const gRes = await fetch("https://discord.com/api/v10/users/@me/guilds?with_counts=true", {
+        headers: { Authorization: `Bot ${existing.bot_token}` },
+      });
+      if (!gRes.ok) return json({ error: "discord_error", detail: "Não foi possível listar servidores." }, 400);
+      const guilds = await gRes.json();
+      return json({
+        success: true,
+        guilds: (guilds as any[]).map(g => ({
+          id: g.id, name: g.name, member_count: g.approximate_member_count || 0,
+          icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null,
+        })),
+      });
+    }
+
+    if (action === "clear_guild") {
+      const { data, error } = await supa.from("user_bots").update({
+        guild_id: null, guild_name: null, guild_member_count: 0,
+      }).eq("user_id", user.id).select().single();
+      if (error) return json({ error: error.message }, 400);
+      return json({ success: true, bot: data });
+    }
+
     if (action === "select_guild") {
       const { guild_id, guild_name, guild_member_count } = body;
       const { data, error } = await supa.from("user_bots").update({

@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { DMFlowMark } from "@/components/DMFlowMark";
 import {
   Bot, KeyRound, CheckCircle2, Server, Send, Sparkles, Upload, X,
-  TrendingUp, MessageCircle, AlertCircle, Loader2, Users, Flame, Target, Zap, Clock,
+  TrendingUp, MessageCircle, AlertCircle, Loader2, Users, Flame, Target, Zap, Clock, RefreshCw,
 } from "lucide-react";
 
 type UserBot = {
@@ -90,6 +90,19 @@ export default function MyBot() {
     toast.success(`Servidor "${g.name}" selecionado!`);
     setBot(data.bot);
     setGuilds([]);
+  };
+
+  const switchGuild = async () => {
+    const { data, error } = await supabase.functions.invoke("user-bot-connect", {
+      body: { action: "list_guilds" },
+    });
+    if (error || data?.error) return toast.error(data?.detail || "Erro ao listar servidores.");
+    const { data: cleared } = await supabase.functions.invoke("user-bot-connect", {
+      body: { action: "clear_guild" },
+    });
+    if (cleared?.bot) setBot(cleared.bot);
+    setGuilds(data.guilds || []);
+    toast.info("Escolha o novo servidor.");
   };
 
   const uploadImage = async (file: File) => {
@@ -297,7 +310,12 @@ export default function MyBot() {
               <Server className="h-3.5 w-3.5 shrink-0" /> {bot.guild_name} · <Users className="h-3.5 w-3.5 shrink-0" /> {fmt(bot.guild_member_count ?? 0)}
             </div>
           </div>
-          <Badge className="bg-success/15 text-success border-success/30 hidden sm:flex">Acesso vitalício</Badge>
+          <div className="flex items-center gap-2">
+            <Button onClick={switchGuild} variant="outline" size="sm" className="gap-1.5">
+              <RefreshCw className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Trocar servidor</span>
+            </Button>
+            <Badge className="bg-success/15 text-success border-success/30 hidden md:flex">Acesso vitalício</Badge>
+          </div>
         </div>
       </Card>
 
