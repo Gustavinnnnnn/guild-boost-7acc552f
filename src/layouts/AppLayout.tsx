@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Megaphone, LogOut, MessageCircle, Crown, Bot } from "lucide-react";
+import { LayoutDashboard, Megaphone, LogOut, MessageCircle, Crown, Bot, User as UserIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { DMFlowMark } from "@/components/DMFlowMark";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,7 @@ const baseNav = [
   { to: "/app/campanhas", label: "Campanhas", icon: Megaphone, end: false },
   { to: "/app/creditos", label: "DMs", icon: MessageCircle, end: false },
   { to: "/app/meu-bot", label: "Meu Bot", icon: Bot, end: false },
+  { to: "/app/minha-conta", label: "Minha Conta", icon: UserIcon, end: false },
 ];
 
 const AppLayout = () => {

@@ -16,6 +16,7 @@ import Credits from "./pages/app/Credits";
 import Affiliate from "./pages/app/Affiliate";
 import MyServers from "./pages/app/MyServers";
 import MyBot from "./pages/app/MyBot";
+import MyAccount from "./pages/app/MyAccount";
 import Admin from "./pages/app/Admin";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="creditos" element={<Credits />} />
             <Route path="servidores" element={<MyServers />} />
             <Route path="meu-bot" element={<MyBot />} />
+            <Route path="minha-conta" element={<MyAccount />} />
             <Route path="afiliados" element={<Affiliate />} />
             <Route path="admin" element={<Admin />} />
           </Route>
