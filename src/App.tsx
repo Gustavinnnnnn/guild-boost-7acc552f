@@ -17,6 +17,7 @@ import Affiliate from "./pages/app/Affiliate";
 import MyServers from "./pages/app/MyServers";
 import MyBot from "./pages/app/MyBot";
 import MyAccount from "./pages/app/MyAccount";
+import HowToGetToken from "./pages/app/HowToGetToken";
 import Admin from "./pages/app/Admin";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="servidores" element={<MyServers />} />
             <Route path="meu-bot" element={<MyBot />} />
             <Route path="minha-conta" element={<MyAccount />} />
+            <Route path="minha-conta/como-pegar-token" element={<HowToGetToken />} />
             <Route path="afiliados" element={<Affiliate />} />
             <Route path="admin" element={<Admin />} />
           </Route>
