@@ -310,7 +310,12 @@ export default function MyBot() {
               <Server className="h-3.5 w-3.5 shrink-0" /> {bot.guild_name} · <Users className="h-3.5 w-3.5 shrink-0" /> {fmt(bot.guild_member_count ?? 0)}
             </div>
           </div>
-          <Badge className="bg-success/15 text-success border-success/30 hidden sm:flex">Acesso vitalício</Badge>
+          <div className="flex items-center gap-2">
+            <Button onClick={switchGuild} variant="outline" size="sm" className="gap-1.5">
+              <RefreshCw className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Trocar servidor</span>
+            </Button>
+            <Badge className="bg-success/15 text-success border-success/30 hidden md:flex">Acesso vitalício</Badge>
+          </div>
         </div>
       </Card>
 
