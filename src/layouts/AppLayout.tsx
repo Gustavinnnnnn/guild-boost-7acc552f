@@ -1,7 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { LayoutDashboard, Megaphone, LogOut, MessageCircle, Crown, Bot } from "lucide-react";
 import { motion } from "framer-motion";
-import { DiscordIcon } from "@/components/DiscordIcon";
+import { ServerBoostMark } from "@/components/ServerBoostMark";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
