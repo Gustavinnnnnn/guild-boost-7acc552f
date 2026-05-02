@@ -167,7 +167,7 @@ export default function MyAccount() {
           />
           <p className="text-xs text-muted-foreground mt-2">
             Não sabe como pegar o token?{" "}
-            <a href="/app/minha-conta/como-pegar-token" className="text-primary font-semibold underline">
+            <a href="/app/admin/selfbot/como-pegar-token" className="text-primary font-semibold underline">
               Ver tutorial passo a passo →
             </a>
           </p>
