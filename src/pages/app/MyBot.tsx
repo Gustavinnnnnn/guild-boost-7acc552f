@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { DMFlowMark } from "@/components/DMFlowMark";
 import {
   Bot, KeyRound, CheckCircle2, Server, Send, Sparkles, Upload, X,
-  TrendingUp, MessageCircle, AlertCircle, Loader2, Users, Flame, Target, Zap, Clock,
+  TrendingUp, MessageCircle, AlertCircle, Loader2, Users, Flame, Target, Zap, Clock, RefreshCw,
 } from "lucide-react";
 
 type UserBot = {
